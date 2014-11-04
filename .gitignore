@@ -1,0 +1,9 @@
+# Booty Framework Ignore
+log/
+cache/
+applications/*
+!applications/shared/
+!applications/framework/
+tools/*/
+!tools/composer/
+!tools/shared/
