@@ -51,6 +51,38 @@ define("BOOTY_RESOURCES_APPLICATION", "/resources/");
  	const httpdownload = 2;
  }
 
+/**
+  * (enum) ResourcesFileIdentity 
+  */
+
+interface ResourcesFileIdentity {
+	const none = '';
+	const minimized = '.min.';
+	const optimized = '.opt.';
+}
+
+/** 
+  * (enum) ResourcesCompilerInclusion 
+  */
+
+interface ResourcesCompilerInclusion {
+	const none = false;
+	const nocache = 'nocache';
+	const links = 'links';
+	
+}
+
+/**
+  * (enum) ResourcesFileType
+  */
+
+interface ResourcesFileType {
+	const css = ".css";
+	const less = ".less";
+	const js = ".js";
+	const json = ".json";
+}
+
 /** 
   * (class) Resources
   * This is the primary object
@@ -113,6 +145,9 @@ class Resources extends Primitive {
 	 */
 
 	public function add($values) {
+		// initialize
+		$that = $this;
+
 		// internal fields
 		if(is_string($values) && substr($values, 0, 1) == "@") {
 			// loadable resources
@@ -129,16 +164,111 @@ class Resources extends Primitive {
 
 		// eval
 		switch(true) {
+			
 			case is_array($values):
 				// cycle each value
 				foreach($values as $value) $this->add($value);
 				break;
 
 			case is_dir($values):
-				echo "DIR";
+				// create filer object
+				$filer = new Files();
+				// get list
+				$list = new Collection($filer->get($values, FilesFilters::onlyfiles, true));
+				// filter list
+				$list->cycle(function($key, $value) use ($that) {
+					// add files only
+					if(is_file($value)) $that->add($value);
+				});
+
+				break;
+
+			case is_file($values):
+				// add to list
+				global $BOOTY_GLOBAL;
+
+				// parse extension
+				switch(true) {
+					// minimized
+					case stripos($values, ResourcesFileIdentity::minimized) !== false:
+						// do nothing, TODO: Implement
+						break;
+
+					case stripos($values, ResourcesFileIdentity::optimized) !== false:
+						// do nothing, TODO: Implement
+						break;
+
+					default:
+						// include this file
+						$this->list->add($values);
+						break;
+				}
+
+				break;
+
+			case is_string($values):
+				foreach(array(
+					// Internal Resources
+					BOOTY_RESOURCES_PATH, 
+					// Application Resources
+					BOOTY_RESOURCES_APPLICATION
+				) as $path) {
+					// add item
+					$path .= $values;
+					// check
+					if(is_dir($path) || is_file($path)) {
+						$this->add($path);
+					}
+				}
+				
+		}
+	}
+
+	/** 
+	 * (compile) 
+	 * Compiles the resources held
+	 *
+	 * @param type
+	*/
+
+	public function compile($inclusion = false) {
+
+		$inclusion = ResourcesCompilerInclusion::links;
+
+		// detect files
+		$this->__detect();
+
+
+		// switch by inclusion type
+		switch($inclusion) {
+			// list of links
+			case ResourcesCompilerInclusion::links:
+				// create link based on file detection
+
+
+				break;
+
+			// default
+			default:
 
 				break;
 		}
+	}
+
+	/** 
+	 * (__detect) Detects files stored in the list
+	 */
+
+	private function __detect() {
+		// cycle list
+		$this->list->cycle(function($key, $value, $item) {
+			// quick file detection
+			var_dump($value);
+
+			exit;
+
+
+		});
 	}
 
 	/** 
