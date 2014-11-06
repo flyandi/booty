@@ -39,19 +39,61 @@ namespace Booty\Framework;
   */
 
 
+/**
+  * (enum)
+  */
+
+interface CollectionQuery {
+	const all = true;
+}
+
+
+/** 
+  * (class) CollectionItem
+  * Helper class for shadow data
+  */
+
+class CollectionItem extends Primitive {
+
+	/** 
+	 * (__construct) 
+	 *
+     * @param name 		The name
+     * @param data 		Any data
+	*/
+
+	public function __construct($name, $data = null, $meta = null) {
+		// assign name
+		$this->name = $name;
+		// prepare data
+		if($data !== null && !is_array($data)) $data = array($data);
+		// assign
+		foreach(array_merge(
+			// data bag
+			is_array($data) ? $data : array(),
+			// meta bag
+			is_array($meta) ? $meta : array()
+		) as $key=>$value) {
+			// assign
+			$this->{$key} = $value;
+		}
+	}
+}
+
 
 /** 
   * (class) Collection
   * Easy access to arrays 
   */
 
-class Collection {
+class Collection extends Primitive {
 
 	/** 
 	 * (privates)
 	 */
 
 	private $buffer = array();
+	private $shadow = array(); // used for additional meta data
 
 	/** 
 	 * (__construct) 
@@ -64,7 +106,6 @@ class Collection {
 	public function __construct($source = array()) {
 		// assign
 		$this->apply($source);
-
 	}
 
 	/**
@@ -75,6 +116,23 @@ class Collection {
 	public function clear() {
 		// clear
 		$this->buffer = array();
+		$this->shadow = array();
+	}
+
+	/**
+	  * (clear) clears the collection
+	  *
+	  */
+
+	public function add($name, $data = null, $meta = null) {
+		// create key
+		$key = $data !== null && !is_integer($name) ? $name : count($this->buffer);
+		// create value
+		$value = $data === null ? $name : $data;
+		// initialize	
+		$this->buffer[$key] = $value; 
+		// set shadow
+		$this->shadow[$key] = new CollectionItem($key, $value, $meta);
 	}
 
 	/**
@@ -84,8 +142,12 @@ class Collection {
 	 */
 
 	public function apply($source) {
-		// apply to buffer
-		$this->buffer = is_array($source) || is_object($source) ? (array) $source : array($source);
+		// clear
+		$this->clear();
+		// do buffer
+		foreach($source as $key=>$value) {
+			$this->add($key, $value);
+		}
 	}
 
 
@@ -96,6 +158,18 @@ class Collection {
 	  */
 
 	public function cycle($callback, $recursive = false, $buffer = false) {
+		// pass to query routine
+		return $this->query(CollectionQuery::all, $callback, $recursive, $buffer);
+	}
+	
+
+
+	/**
+	  * (query) a simple query routine
+	  *
+	  */
+
+	public function query($query, $callback, $recursive = false, $buffer = false) {
 		// initialize 
 		$result = false;
 		
@@ -105,12 +179,36 @@ class Collection {
 			// detect sub array
 			if($recursive && (is_array($value) || is_object($value))) {
 				// process
-				$this->cycle($callback, true, (array) $value);
+				$this->query($query, $callback, true, (array) $value);
 			} else {
+				// execute callback only on query
+				$match = false;
+
+				// process query
+				switch(true) {
+					case is_array($query):
+						// init match
+						$match = true;
+						// query
+						foreach($query as $qkey=>$qval) {
+							if(!isset($this->shadow[$key]) || !isset($this->shadow[$key]->{$qkey}) || !Compare($this->shadow[$key]->{$qkey}, $qval)) {
+								$match = false;
+								break;
+							}
+						}
+						break;
+
+					case CollectionQuery::all: default:
+						$match = true;
+				}
+
 				// get result
-				$result = $callback($key, $value);
-				// evaluate 
-				if($result !== null) break;
+				if($match) {
+					// run callback
+					$result = $callback($key, $value, isset($this->shadow[$key]) ? $this->shadow[$key] : false);
+					// evaluate 
+					if($result !== null) break;
+				}
 			}
 		}
 

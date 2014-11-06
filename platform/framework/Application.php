@@ -184,10 +184,10 @@ class Application extends Primitive {
 		global $BOOTY_GLOBAL;
 
 		// process default routes
-		switch($request = GetDirVar(0, BOOTY_ROUTE_ROOT)) {
+		switch($request = GetDirVar(0, DefaultRoutes::root)) {
 
 			// (Resources)
-			case BOOTY_ROUTE_RESOURCES: 
+			case DefaultRoutes::resources: 
 				// let resources handle this request
 				Resources::handleRequest($this->location, $this->context());
 				break;

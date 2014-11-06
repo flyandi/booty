@@ -40,10 +40,16 @@ namespace Booty\Framework;
   * (constants)
   */
 
-// default routes
 
-define("BOOTY_ROUTE_ROOT", "/");
-define("BOOTY_ROUTE_RESOURCES", "resources");
+
+/**
+  * (enum)
+  */
+
+interface DefaultRoutes {
+	const root = "/";
+	const resources = "resources";
+}
 
 /** 
   * (class) Application

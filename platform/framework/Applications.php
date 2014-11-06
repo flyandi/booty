@@ -154,6 +154,14 @@ class Applications extends Primitive {
 			// include
 			require_once($filename);
 
+			// create application constants
+			foreach(array(
+				"location" => dirname($filename),
+				"filename" => $filename,
+			) as $k=>$v) {
+				define("_APPLICATION_" . strtoupper($k), $v);
+			}
+
 			// create class
 			$this->application = new \Application\Application(
 				// origin
@@ -162,7 +170,7 @@ class Applications extends Primitive {
 				$configuration
 			);
 
-			// assign configuration
+			
 		}
 	}
 

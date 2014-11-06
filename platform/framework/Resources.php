@@ -34,22 +34,24 @@
 
 namespace Booty\Framework;
 
-/**
-  * (constants)
+/** 
+  * (enum) ResourcesPath
   */
 
-define("BOOTY_RESOURCES_PATH", "../resources/");
-define("BOOTY_RESOURCES_APPLICATION", "/resources/");
+interface ResourcesPath {
+	const platform = "../resources/";
+	const application = "/resources/";
+}
 
 /** 
   * (enum) ResourcesOutput
   */
 
- interface ResourcesOutput {
- 	const raw = 0;
- 	const http = 1;
- 	const httpdownload = 2;
- }
+interface ResourcesOutput {
+	const raw = 0;
+	const http = 1;
+	const httpdownload = 2;
+}
 
 /**
   * (enum) ResourcesFileIdentity 
@@ -77,10 +79,10 @@ interface ResourcesCompilerInclusion {
   */
 
 interface ResourcesFileType {
-	const css = ".css";
-	const less = ".less";
-	const js = ".js";
-	const json = ".json";
+	const css = "css";
+	const less = "less";
+	const js = "js";
+	const json = "json";
 }
 
 /** 
@@ -89,6 +91,13 @@ interface ResourcesFileType {
   */
 
 class Resources extends Primitive {
+
+	/** 
+	 * (const)
+	 */
+
+	const Type = "type";
+	const Resource = "resource";
 
 	/** 
 	 * (privates)
@@ -144,7 +153,7 @@ class Resources extends Primitive {
 	 * @param name
 	 */
 
-	public function add($values) {
+	public function add($values, $meta = false) {
 		// initialize
 		$that = $this;
 
@@ -164,10 +173,12 @@ class Resources extends Primitive {
 
 		// eval
 		switch(true) {
-			
+
 			case is_array($values):
 				// cycle each value
-				foreach($values as $value) $this->add($value);
+				foreach($values as $value) {
+					$this->add($value);
+				}
 				break;
 
 			case is_dir($values):
@@ -176,11 +187,15 @@ class Resources extends Primitive {
 				// get list
 				$list = new Collection($filer->get($values, FilesFilters::onlyfiles, true));
 				// filter list
-				$list->cycle(function($key, $value) use ($that) {
+				$list->cycle(function($key, $value) use ($that, $meta) {
 					// add files only
-					if(is_file($value)) $that->add($value);
+					if(is_file($value)) {
+						$that->add($value,  array(
+							Self::Resource => 
+								(isset($meta[Self::Resource]) ? $meta[Self::Resource] : "/" . DefaultRoutes::resources . "/") . basename($value)
+						));
+					}
 				});
-
 				break;
 
 			case is_file($values):
@@ -200,7 +215,7 @@ class Resources extends Primitive {
 
 					default:
 						// include this file
-						$this->list->add($values);
+						$this->list->add($values, null, $meta);
 						break;
 				}
 
@@ -209,15 +224,17 @@ class Resources extends Primitive {
 			case is_string($values):
 				foreach(array(
 					// Internal Resources
-					BOOTY_RESOURCES_PATH, 
+					ResourcesPath::platform,
 					// Application Resources
-					BOOTY_RESOURCES_APPLICATION
+					ApplicationInfo::location . ResourcesPath::application
 				) as $path) {
 					// add item
 					$path .= $values;
 					// check
 					if(is_dir($path) || is_file($path)) {
-						$this->add($path);
+						$this->add($path, array(
+							Self::Resource => "/" . DefaultRoutes::resources . "/" . $values . (is_dir($path) ? "/" : "")
+						));
 					}
 				}
 				
@@ -233,6 +250,10 @@ class Resources extends Primitive {
 
 	public function compile($inclusion = false) {
 
+		// initialize result
+		$result = false;
+
+
 		$inclusion = ResourcesCompilerInclusion::links;
 
 		// detect files
@@ -243,8 +264,28 @@ class Resources extends Primitive {
 		switch($inclusion) {
 			// list of links
 			case ResourcesCompilerInclusion::links:
-				// create link based on file detection
+				// initialize result
+				$result = array();
 
+				// create link based on file detection
+				foreach(array(
+					ResourcesFileType::js => function($s) { 
+						return Tag("script", array("src"=>$s));
+					},
+					ResourcesFileType::css => function($s) {
+						return HTML::Stylesheet($s);
+					} 
+	 			) as $type=>$fn) {
+					// query from list
+					$this->list->query(array(Self::Type => $type), function($key, $value, $item) use ($fn, &$result) {
+						// add to buffer
+						$result[] = $fn($item->{Self::Resource});
+					});
+
+				}
+
+				// all set format result
+				$result = implode("\n", $result);
 
 				break;
 
@@ -253,6 +294,9 @@ class Resources extends Primitive {
 
 				break;
 		}
+
+		// return result
+		return $result;
 	}
 
 	/** 
@@ -262,12 +306,15 @@ class Resources extends Primitive {
 	private function __detect() {
 		// cycle list
 		$this->list->cycle(function($key, $value, $item) {
+			// get suffix
+			$suffix = pathinfo($value, PATHINFO_EXTENSION);
 			// quick file detection
-			var_dump($value);
-
-			exit;
-
-
+			switch(true) {
+				// (standard) resources
+				case in_array($suffix, array(ResourcesFileType::css, ResourcesFileType::js)):
+					$item->{Self::Type} = $suffix;
+					break;
+			}
 		});
 	}
 
@@ -326,9 +373,9 @@ class Resources extends Primitive {
 				// find resource
 				foreach(array(
 					// Internal Resources
-					BOOTY_RESOURCES_PATH, 
+					ResourcesPath::platform, 
 					// Application Resources
-					$source ? $source . BOOTY_RESOURCES_APPLICATION : false,
+					$source ? $source . ResourcesPath::application : false,
 				) as $path) {
 					// get list
 					$list = new Collection($filer->get($path, FilesFilters::onlyfiles, true));

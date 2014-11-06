@@ -332,6 +332,29 @@ function FillVariableString($string, $data, $simplematch = false, $st = VARIABLE
 
 
 /** 
+ * (macro) Extend
+ * Extends an array like the jQuery $.extend function 
+ *
+ * @param <multiple>	As many arrays
+ */ 
+
+function Extend() {
+	// initialize result
+	$result = array();
+
+	// cycle
+	foreach(func_get_args() as $arr) {
+		if(is_array($arr)) {
+			$result = array_merge($result, $arr);
+		}
+	}
+
+	// return result
+	return $result;
+}
+
+
+/** 
  * (macro) TraverseArray
  * Traverses an array with filters
  *
@@ -419,6 +442,20 @@ function StripWhitespace($source, $stripbreaklines = true, $stripcomments = fals
 	// return
 	return $source;
 }
+
+
+/** 
+ * (macro) IsLowerCase
+ * Checks if the string is all lower case
+ *
+ * @param s 				The source string
+ */ 
+function IsLowerCase($s) {
+	return strtolower($s)===$s;
+}
+
+
+
 
 
 # -------------------------------------------------------------------------------------------------------------------
@@ -536,29 +573,6 @@ function IfIsString($a, $b) {
 	return false;
 }	
 
-# -------------------------------------------------------------------------------------------------------------------
-# implodeValues
-function implodeValues($r, $div=";", $cslash=true) { 
-	return array_implodevalues($r, $div, $cslash);
-}
-
-# -------------------------------------------------------------------------------------------------------------------
-# explodeValues
-function explodeValues($uv) { 
-	$tmp = explode(";", $uv);
-	$arr = Array();
-	foreach($tmp as $tmpp) {
-		$nv = explode("=", $tmpp);
-		if (isset($nv[0]) && isset($nv[1])) {
-			$v  = stripslashes($nv[1]);
-			// remove magic quotes
-			$v  = substr($v, 1, strlen($v)-2);
-			// add to array
-			$arr[$nv[0]] = $v;
-		}
-	}
-	return $arr;
-}	
 
 # -------------------------------------------------------------------------------------------------------------------
 # GetRemoteAddress
@@ -597,30 +611,6 @@ function Redirect($url){header("location: $url"); exit;}
 # LeftString, compares the left string
 function LeftString($haystack, $needle) {
 	return strtolower(substr($haystack, 0, strlen($needle))) == strtolower($needle);
-}
-
-# -------------------------------------------------------------------------------------------------------------------
-# Array Helper
-
-// array escapestrings
-function array_escapestrings($r, $mysql=true) {while(list($name,$value)=each($r)){$r[$name]=$mysql?mysql_real_escape_string($value):addslashes($value);}return $r;}
-
-// array_multiple_implode
-function array_multiple_implode($r,$p0="=",$p1=","){$s="";$x=0;foreach($r as $ri){while(list($n,$v)=each($r)){$s[$x]=$n.$p0.'"'.$v.'"';$x+=1;}}return implode($p1,$s);}
-	
-// array implode values
-function array_implodevalues($r=false,$p0=";",$p1="=",$s=false){if($r===false){return "";}$n=Array();while(list($n1,$n2)=each($r)){if($n2==VALUE_NULL){$n2="NULL";} else if($s===true){$n2=addslashes('"'.$n2.'"');}else{$n2='"'.$n2.'"';}$n[count($n)]=$n1.$p1.$n2;}return implode($p0,$n);}
-
-// array explode values
-function array_explodevalues($r=false,$p0=";",$p1="=",$s=true){if ($r===false){return Array();}$t=explode($p0,$r);$arr=Array();foreach($t as $ts){$n=explode($p1,$ts);if(isset($n[0])&&isset($n[1])){if($s===true){$n[1]=stripslashes($n[1]);}$n[1]=substr($n[1],1,strlen($n[1])-2);$arr[$n[0]]=$n[1];}};return $arr;}
-
-// array quote list
-function array_implodequotelist($r, $sep = ",", $quote = "\"") {
-	$rs = Array();
-	foreach($r as $n=>$v) {
-		$rs[] = sprintf("%s%s%s", $quote, $v, $quote);
-	}
-	return implode($sep, $rs);
 }
 
 # -------------------------------------------------------------------------------------------------------------------
@@ -683,9 +673,6 @@ function explodeVar($string, $delimiter = "=", $break = "\n") {
 }	
 
 # islowercase
-function islowercase($s) {
-	return strtolower($s)===$s;
-}
 
 
 

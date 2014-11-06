@@ -93,6 +93,7 @@ $application_loader->detect($BOOTY_GLOBAL->asArray("applications"));
 
 // run handlers
 if($application_loader->has()) {
+	
 	// run application 
 	return $application_loader->application->emit();
 } 

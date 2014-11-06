@@ -86,9 +86,9 @@
 
 	"resources": {
 
-		"@jquery": ["jquery/"],
+		"@jquery": ["jquery"],
 
-		"@bootstrap": ["bootstrap/js/", "bootstrap/css/"]
+		"@bootstrap": ["bootstrap/js", "bootstrap/css"]
 	},
 
 

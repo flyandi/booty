@@ -34,57 +34,12 @@
 
 namespace Booty\Framework;
 
-/**
-  * (constants)
-  */
-
-
-/**
-  * (Enums)
-  */
-
-
-interface HTMLMedia {
-	const screen = "screen";
-}
-
-
-
 /** 
-  * (class) HTML
+  * (enum) ApplicationInfo
   */
 
-class HTML extends Primitive {
-
-
-	/** 
-	 * (__construct) 
-	 *
-	*/
-
-	public function __construct() {
-
-
-	}
-
-
-	/** 
-	 * (Stylesheet) Creates a quick code snippet for a stylesheet 
-	 *
-	 */
-
-	static public function Stylesheet($source, $media = false) {
-		return Tag("link", Extend(
-			// default values
-			array(
-				"rel" => "stylesheet", 
-				"type" => "text/css", 
-				"href" => $source
-			),
-			// (optional) media
-			$media !== false ? array("media" => $media) : false
-		), false, true);
-	}
-
+interface ApplicationInfo {
+	const location = _APPLICATION_LOCATION;
 }
+
 
