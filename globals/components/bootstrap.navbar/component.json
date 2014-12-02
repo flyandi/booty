@@ -1,0 +1,6 @@
+{
+	"component": "bootstrap.navbar",
+	"global": "navbar",
+	"package": "booty.components",
+	"version": "1.0"
+}

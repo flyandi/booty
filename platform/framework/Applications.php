@@ -144,7 +144,7 @@ class Applications extends Primitive {
 		}
 
 		// load configuration
-		$configuration = new Configuration($application->path . "/" . BOOTY_CONFIGURATION_APPLICATION);
+		$configuration = new Configuration($application->path . "/" . ConfigurationFiles::application);
 
 		// create filename
 		$filename = $application->path . "/" . DefaultValue(@$configuration->application->_applicationfile, BOOTY_APPLICATION_DEFAULTFILE);
@@ -189,7 +189,7 @@ class Applications extends Primitive {
 		foreach($file->get(BOOTY_APPLICATION_PATH) as $path) {
 
 			// get app configuration
-			$application = new Configuration($path . "/" . BOOTY_CONFIGURATION_APPLICATION);
+			$application = new Configuration($path . "/" . ConfigurationFiles::application);
 
 			// check app
 			if($application->id && $application->enabled) {

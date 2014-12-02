@@ -33,71 +33,83 @@
  */
 
 
-/**
-  * (spl_autoload_register)
-  */
-spl_autoload_register(function($className) {
-	if($className[0] == '\\') {
-		$className = substr($className, 1);
-	}
-
-	// initialize
-	$classPath = false;
-
-	// check handler
-	switch(true) {
-		// Framework Namespace
-		case stripos($className, "Framework\\") !== 0:
-			$classPath = lcfirst(strtr(substr($className, strpos($className, "Booty\\") + 6), "\\", "/")) . ".php";
-			break;
-
-		default:
-			return;
-	}
-
-	// include
-	if($classPath) {
-		// prepare 
-		$classPath = __DIR__ . "/" . $classPath;
-		// sanity check
-		if(file_exists($classPath)) require_once($classPath);
-	}
-});
+namespace Booty\Framework;
 
 
 /**
-  * (Global Includes)
+  * (constants)
   */
 
-foreach(array("Helpers") as $c) {
-	require_once("library/" . $c . ".php");
+
+
+/** 
+  * (class) Xml
+  * Manages an xml document
+  */
+
+class Xml extends \SimpleXMLElement {
+
+	/** 
+	 * (private)
+	*/
+
+
+
+	/**
+	 * (query)
+	 * Executes a query 
+	 */
+	public function query($exp, $callback = false) {
+		// prepare expression
+		if(substr($exp, 0, 1) != "/") $exp = "//" . $exp;	
+		// execute expression
+		$result = $this->xpath($exp);	
+		// check result
+		if(is_array($result)) {
+			// cycle list
+			foreach($result as $index => $node) {
+				// check callable
+				if(is_callable($callback)) {
+					$callback($node);
+				}
+			}
+		}
+		// return result
+		return $result;
+	}
+
+
+	/** 
+	 * (asBeautifulXML)
+	 */
+
+	public function asBeautifulXML() {
+		$dom = dom_import_simplexml($this)->ownerDocument;
+		$dom->formatOutput = true;
+		return $dom->saveXML();
+	}
+
+	/**
+	 * (asArray) 
+	 */
+
+	public function asArray() {
+		$result = array();
+		foreach($this as $node) {
+			$result[] = (array)$node;
+		}
+		return $result;
+	}
+
+	/**
+	 * (asAttributesArray)
+	 */
+
+	public function asAttributesArray() {
+		$r = array();
+		foreach($this->attributes() as $name=>$value) {
+			$r[(string) $name] = (string) $value;
+		}
+		return $r;
+	}
 }
-
-
-/**
-  * (Global Configuration)
-  */
-
-SetVar("BOOTY_GLOBAL", $BOOTY_GLOBAL = new Booty\Framework\Configuration(Booty\Framework\ConfigurationFiles::globals));
-
-
-/**
-  * (Application Handler)
-  */
-
-// Initialize app loader
-$application_loader = new Booty\Framework\Applications();
-
-// detect application
-$application_loader->detect($BOOTY_GLOBAL->asArray("applications"));
-
-// run handlers
-if($application_loader->has()) {
-	
-	// run application 
-	return $application_loader->application->emit();
-} 
-
-
-// handle exit
-Booty\Framework\Error::handle(BOOTY_ERROR_NOAPPLICATION);

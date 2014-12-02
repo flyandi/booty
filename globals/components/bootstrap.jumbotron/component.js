@@ -1,4 +1,3 @@
-<?php
 /**
  * Booty
  * @version: v1.0.0
@@ -32,72 +31,72 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
 /**
-  * (spl_autoload_register)
-  */
-spl_autoload_register(function($className) {
-	if($className[0] == '\\') {
-		$className = substr($className, 1);
-	}
-
-	// initialize
-	$classPath = false;
-
-	// check handler
-	switch(true) {
-		// Framework Namespace
-		case stripos($className, "Framework\\") !== 0:
-			$classPath = lcfirst(strtr(substr($className, strpos($className, "Booty\\") + 6), "\\", "/")) . ".php";
-			break;
-
-		default:
-			return;
-	}
-
-	// include
-	if($classPath) {
-		// prepare 
-		$classPath = __DIR__ . "/" . $classPath;
-		// sanity check
-		if(file_exists($classPath)) require_once($classPath);
-	}
-});
-
-
-/**
-  * (Global Includes)
+  * (Component) Jumbotron
   */
 
-foreach(array("Helpers") as $c) {
-	require_once("library/" . $c . ".php");
-}
+var Component = {
+
+	/** 
+	  * Name of Component
+	  */
+
+	name: "bootstrap.jumbotron",
 
 
-/**
-  * (Global Configuration)
-  */
+	/**
+	  * Defaults 
+	  */
 
-SetVar("BOOTY_GLOBAL", $BOOTY_GLOBAL = new Booty\Framework\Configuration(Booty\Framework\ConfigurationFiles::globals));
+	defaults: {
 
+		/**
+		  * (id) the html ID of this component
+		  */
 
-/**
-  * (Application Handler)
-  */
+		id: false,
 
-// Initialize app loader
-$application_loader = new Booty\Framework\Applications();
+		/**
+		  * (title) the title of this jumbotron
+		  */
 
-// detect application
-$application_loader->detect($BOOTY_GLOBAL->asArray("applications"));
+		title: false,
 
-// run handlers
-if($application_loader->has()) {
+		/**
+		  * (message) the message of this jumbotron
+		  */
+
+		message: false,
+
+		/** 
+		  * (buttons) if any
+		  */
+
+		buttons : []
+
+	},
+
+	/**
+	  * (get) primary return function
+	  */
+
+	get: function(parent, item, params) {
+
+		/** Initialize */
+
+		params = $.extend({}, this.defaults, params);
+
+		/** Prepare */
+
+		item.addClass("jumbotron");
+
+		/** Parts */
+		item.append($("<h1>").append(params.default ? params.default : params.title));
+
+		item.append($("<p>").append(params.message));
+
 	
-	// run application 
-	return $application_loader->application->emit();
-} 
+		return item;
+	}
 
-
-// handle exit
-Booty\Framework\Error::handle(BOOTY_ERROR_NOAPPLICATION);
+};

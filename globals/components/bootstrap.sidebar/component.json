@@ -1,0 +1,6 @@
+{
+	"component": "bootstrap.sidebar",
+	"global": "sidebar",
+	"package": "bootstrap.components",
+	"version": "1.0"
+}

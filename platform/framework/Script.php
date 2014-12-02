@@ -33,71 +33,105 @@
  */
 
 
-/**
-  * (spl_autoload_register)
-  */
-spl_autoload_register(function($className) {
-	if($className[0] == '\\') {
-		$className = substr($className, 1);
-	}
-
-	// initialize
-	$classPath = false;
-
-	// check handler
-	switch(true) {
-		// Framework Namespace
-		case stripos($className, "Framework\\") !== 0:
-			$classPath = lcfirst(strtr(substr($className, strpos($className, "Booty\\") + 6), "\\", "/")) . ".php";
-			break;
-
-		default:
-			return;
-	}
-
-	// include
-	if($classPath) {
-		// prepare 
-		$classPath = __DIR__ . "/" . $classPath;
-		// sanity check
-		if(file_exists($classPath)) require_once($classPath);
-	}
-});
+namespace Booty\Framework;
 
 
 /**
-  * (Global Includes)
+  * (constants)
   */
 
-foreach(array("Helpers") as $c) {
-	require_once("library/" . $c . ".php");
+
+interface ScriptWrapper {
+
+	const html = "../globals/scripts/output/html.js";
+
 }
 
 
-/**
-  * (Global Configuration)
+/** 
+  * (class) Script
+  * Manages a script to NodeJS
   */
 
-SetVar("BOOTY_GLOBAL", $BOOTY_GLOBAL = new Booty\Framework\Configuration(Booty\Framework\ConfigurationFiles::globals));
+class Script extends Primitive {
+
+	/** 
+	 * (private)
+	*/
 
 
-/**
-  * (Application Handler)
-  */
+	/** 
+	 * (__construct) 
+	 *
+	 */
 
-// Initialize app loader
-$application_loader = new Booty\Framework\Applications();
+	public function __construct($content = false) {
+		// cler
+		$this->content = $content;
 
-// detect application
-$application_loader->detect($BOOTY_GLOBAL->asArray("applications"));
-
-// run handlers
-if($application_loader->has()) {
-	
-	// run application 
-	return $application_loader->application->emit();
-} 
+	}
 
 
-// handle exit
-Booty\Framework\Error::handle(BOOTY_ERROR_NOAPPLICATION);
+	/**
+	 * (output)
+	 */
+
+	public function output($class = false, $method = Output::html) {
+		// get buffer
+		$buffer = $this->content;
+
+		// switch by method
+		switch($method) {
+			// html
+			case Output::html: 
+				// append html output routine
+				$buffer .= $this->__load($class, ScriptWrapper::html);
+
+				// pass to nodejs
+				if($result = $this->__execute($buffer)) {
+
+					return $result;
+
+				}
+
+				break;
+
+		}
+
+		// return default
+		return false;
+	}
+
+
+	/**
+	 * (__execute)
+	 */
+
+	private function __execute($buffer) {
+
+		$buffer = escapeshellarg(trim(StripWhitespace($buffer, true, true)));
+
+		// quick implementation
+		$result = shell_exec(sprintf("node -e %s", trim($buffer)));
+
+		// check result
+		return $result; // or not
+	}
+
+
+	/**
+	 * (__load)
+	 */
+
+	private function __load($class, $wrapper) {
+		// load wrapper
+		$buffer = file_get_contents($wrapper);
+
+		// replace class
+		$buffer = str_replace(VARIABLE_FIELD_BEGIN . "class" .VARIABLE_FIELD_END, $class, $buffer);
+
+		// return buffer
+		return $buffer;
+	}
+}
+

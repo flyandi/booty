@@ -242,7 +242,7 @@ class Application extends Primitive {
 					),
 
 					// build output
-					$this->view->output($this->output)
+					$this->view->output()
 				);
 
 				// run filters

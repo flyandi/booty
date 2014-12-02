@@ -41,24 +41,10 @@ namespace Booty\Framework;
   */
 
 
-/** 
-  * (enum) ViewPath
-  */
-
-interface ViewPath {
-	const platform = "../global/views/";
-	const application = "/views/";
-}
-
-/** 
-  * (enum) ViewFiles
-  */
-
-interface ViewFiles {
-	const js = "view.js";
-	const php = "view.php";
-	const template = "view.template";
-	const json = "view.json";
+interface ComponentFiles {
+	const js = "component.js";
+	const json = "component.json";
+	const template = "component.template";
 }
 
 
@@ -67,60 +53,55 @@ interface ViewFiles {
   * Manages a view
   */
 
-class View extends Primitive {
+class Component extends Primitive {
 
 	/** 
 	 * (private)
 	*/
 
-	private $configuration = false;
-	private $assets = array();
 
 	/** 
-	 * (__construct
+	 * (__construct) 
 	 *
 	 */
 
-	public function __construct($name = false) {
-		// bridge
-		if($name) $this->set($name);
+	public function __construct($location) {
 
+		// bridge
+		$this->location = $location;
+
+		// register
+		$this->__register($location);
 	}
 
+
 	/** 
-	 * (output) returns the view output
+	 * (output) returns the parsed and detected components
 	 */
 
 	public function output($method = Output::html) {
+
+		// prepare script
+		$script = $this->has(ComponentFiles::js) ? new Script($this->assets[ComponentFiles::js]) : false;
+
 
 		// switch by output mode
 		switch($method) {
 
 			case Output::html:
 
-				// check
-				if($this->has(ViewFiles::template)) {
-
-					// create new template
-					$template = new Template($this->assets[ViewFiles::template]);
-
-					// bind data groups
-					$template->bind(); 
-
-					// process template
-					$buffer = $template->output();
-
-					// process components
-					$buffer = $this->__components($buffer);
-
-					// process template
-					return $buffer;
+				// safety check
+				if($script) {
+					return $script->output("Component", $method);
 				}
 
 				break;
 		}
 
+		// return false
+		return false;
 	}
+
 
 	/** 
 	  * (has) returns true if a view was loaded
@@ -132,41 +113,6 @@ class View extends Primitive {
 
 
 	/** 
-	 * (set) 
-	 * sets the view's resources
-	 */
-
-	public function set($name) {
-		// find the view and register
-		return $this->find($name, true);
-	}
-
-	/** 
-	 * (find)
-	 * Finds a view
-	 */
-
-	public function find($name, $register = false) {
-		// find view in application and globals
-		foreach(array(
-			// Application Resources
-			ApplicationInfo::location . ViewPath::application,
-			// Globals
-			ViewPath::platform
-		) as $path) {
-			// check if paths exists
-			if(is_dir($path . $name)) {
-				// we got a view, register view files
-				return $register ? $this->__register($path . $name) : $path . $name;
-			}
-
-		}	
-		// return error
-		return false;	
-	}
-	
-
-	/** 
 	 * (__register)
 	 * Registers the view
 	 */
@@ -176,26 +122,10 @@ class View extends Primitive {
 		$this->assets = array();
 
 		// load assets
-		foreach(array(ViewFiles::template, ViewFiles::php, ViewFiles::js, ViewFiles::json) as $f) {
+		foreach(array(ComponentFiles::template, ComponentFiles::js, ComponentFiles::json) as $f) {
 			// load and assign
 			$this->assets[$f] = file_exists($path . "/" .$f) ? file_get_contents($path . "/" . $f) : false;
 		}
 	}
-
-
-	/** 
-	 * (__components)
-	 * Processes the components
-	 */
-
-	private function __components($buffer) {
-		// create component parser
-		$c = new Components($buffer);
-
-		// pass buffer
-		return $c->output();
-	}
-
-	
 }
 

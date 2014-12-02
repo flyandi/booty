@@ -120,7 +120,7 @@ class Collection extends Primitive {
 	}
 
 	/**
-	  * (clear) clears the collection
+	  * (add) adds to the collection
 	  *
 	  */
 
@@ -133,6 +133,15 @@ class Collection extends Primitive {
 		$this->buffer[$key] = $value; 
 		// set shadow
 		$this->shadow[$key] = new CollectionItem($key, $value, $meta);
+	}
+
+	/**
+	  * (remove) removes from the collection
+	  *
+	  */
+
+	public function remove($name) {
+		
 	}
 
 	/**
@@ -223,6 +232,7 @@ class Collection extends Primitive {
 	 * 
      * @param name 		Name of the configuration key
 	*/
+
 	public function __get($name) {
 		
 		return self::__map(array(
@@ -235,6 +245,7 @@ class Collection extends Primitive {
 	  * 
 	  * @param name 	Name of the configuration key
 	  */
+
 	public function __call($type, $params) {
 		
 	}

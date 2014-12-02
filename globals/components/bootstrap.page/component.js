@@ -1,4 +1,3 @@
-<?php
 /**
  * Booty
  * @version: v1.0.0
@@ -32,72 +31,76 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
 /**
-  * (spl_autoload_register)
+  * (Component) Dropdown
   */
-spl_autoload_register(function($className) {
-	if($className[0] == '\\') {
-		$className = substr($className, 1);
+
+var Component = {
+
+	/** 
+	  * Name of Component
+	  */
+
+	name: "bootstrap.page",
+
+
+	/**
+	  * Defaults 
+	  */
+
+	defaults: {
+
+		/**
+		  * (id) the html ID of this component
+		  */
+
+		id: false,
+
+		/**
+		  * (label) the label of the dropdown
+		  */
+
+		label: false,
+
+		/** 
+		  * (items) holds a list of items for the drop down
+		  */
+
+		items: []
+
+	},
+
+	/**
+	  * (get) primary return function
+	  */
+
+	get: function(parent, item, params) {
+
+		/**
+		  * Initialize
+		  */
+
+
+		params = $.extend({}, this.defaults, params);
+
+		/**
+		  * Prepare item
+		  */
+
+		item.addClass("page").attr($.extend({}, {
+			role: 'presentation'
+		}, params.id ? {id: params.id} : false)).appendTo(item);
+
+		if($(".sidebar").length != 0) item.addClass("withsidebar");
+
+		item.bind({
+			after: function() {
+				$(window).trigger("pageresize");
+			}
+		});
+
+		
+		return item;
 	}
 
-	// initialize
-	$classPath = false;
-
-	// check handler
-	switch(true) {
-		// Framework Namespace
-		case stripos($className, "Framework\\") !== 0:
-			$classPath = lcfirst(strtr(substr($className, strpos($className, "Booty\\") + 6), "\\", "/")) . ".php";
-			break;
-
-		default:
-			return;
-	}
-
-	// include
-	if($classPath) {
-		// prepare 
-		$classPath = __DIR__ . "/" . $classPath;
-		// sanity check
-		if(file_exists($classPath)) require_once($classPath);
-	}
-});
-
-
-/**
-  * (Global Includes)
-  */
-
-foreach(array("Helpers") as $c) {
-	require_once("library/" . $c . ".php");
-}
-
-
-/**
-  * (Global Configuration)
-  */
-
-SetVar("BOOTY_GLOBAL", $BOOTY_GLOBAL = new Booty\Framework\Configuration(Booty\Framework\ConfigurationFiles::globals));
-
-
-/**
-  * (Application Handler)
-  */
-
-// Initialize app loader
-$application_loader = new Booty\Framework\Applications();
-
-// detect application
-$application_loader->detect($BOOTY_GLOBAL->asArray("applications"));
-
-// run handlers
-if($application_loader->has()) {
-	
-	// run application 
-	return $application_loader->application->emit();
-} 
-
-
-// handle exit
-Booty\Framework\Error::handle(BOOTY_ERROR_NOAPPLICATION);
+};

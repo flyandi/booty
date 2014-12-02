@@ -40,14 +40,15 @@ namespace Booty\Framework;
 
 
 // Configuration patterns and locations
-define("BOOTY_CONFIGURATION_GLOBAL", "../configuration/Booty.json");
-define("BOOTY_CONFIGURATION_APPLICATION", "Application.json");
+interface ConfigurationFiles {
+	const globals = "../configuration/Booty.json";
+	const application = "Application.json";
+}
 
-// Configuration formats
-define("BOOTY_CONFIGURATION_JSON", 0);
-define("BOOTY_CONFIGURATION_XML", 1);
-
-
+interface ConfigurationTypes {
+	const json = 0;
+	const xml = 1;
+}
 
 /** 
   * (class) Configuration
@@ -154,8 +155,8 @@ class Configuration {
 				if(!$format) {
 					// get by file extension map
 					$map = array(
-						"json"=>BOOTY_CONFIGURATION_JSON,
-						"xml"=>BOOTY_CONFIGURATION_XML
+						"json"=>ConfigurationTypes::json,
+						"xml"=>ConfigurationTypes::xml
 					);
 					// get extension
 					$ext = pathinfo($source, PATHINFO_EXTENSION);
@@ -172,11 +173,11 @@ class Configuration {
 					// load by format
 					switch($format) {
 						//(json)
-						case BOOTY_CONFIGURATION_JSON:
+						case ConfigurationTypes::json:
 							$this->buffer = json_decode($source);
 							break;
 
-						case BOOTY_CONFIGURATION_XML:
+						case ConfigurationTypes::xml:
 							// Need to be implemented
 							break; 
 					}
