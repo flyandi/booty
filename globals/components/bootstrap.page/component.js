@@ -56,17 +56,17 @@ var Component = {
 
 		id: false,
 
-		/**
-		  * (label) the label of the dropdown
-		  */
-
-		label: false,
-
 		/** 
-		  * (items) holds a list of items for the drop down
+		  * (content) the content
 		  */
 
-		items: []
+		content: false,
+
+		/**
+		  * (padding) inner padding of page
+		  */
+
+		padding: 20,
 
 	},
 
@@ -80,8 +80,9 @@ var Component = {
 		  * Initialize
 		  */
 
+		var that = this;
 
-		params = $.extend({}, this.defaults, params);
+		this.params = $.extend({}, this.defaults, params);
 
 		/**
 		  * Prepare item
@@ -93,14 +94,51 @@ var Component = {
 
 		if($(".sidebar").length != 0) item.addClass("withsidebar");
 
+		var page = $("<div>").addClass("page-inner").css("padding", this.params.padding).appendTo(item);
+
+		if(params.ref != Booty.ref.none) page.attr("booty-ref", params.ref);
+
 		item.bind({
 			after: function() {
 				$(window).trigger("pageresize");
-			}
-		});
 
-		
+				$(this).trigger("update");
+			},
+
+			update: function(ev, content) {
+				that.update(page, content);
+			},
+
+		});
+	
 		return item;
-	}
+	},
+
+
+	/**
+	 * (update)
+	 */
+
+	update: function(page, content) {
+
+		var that = this;
+
+		var content = content ? content : ParseVariable(this.params.content);
+
+		page.empty();
+
+		switch(true) {
+
+			case Booty.$.is.array(content):
+
+				break;
+
+			default:
+
+				page.append(content);
+
+				break;
+		}
+	},
 
 };

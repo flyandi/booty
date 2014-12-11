@@ -32,7 +32,7 @@
  */
 
 /**
-  * (Component) Dropdown
+  * (Component) Label
   */
 
 var Component = {
@@ -41,7 +41,7 @@ var Component = {
 	  * Name of Component
 	  */
 
-	name: "bootstrap.dropdown",
+	name: "bootstrap.label",
 
 
 	/**
@@ -62,11 +62,7 @@ var Component = {
 
 		label: false,
 
-		/** 
-		  * (items) holds a list of items for the drop down
-		  */
-
-		items: []
+		
 
 	},
 
@@ -87,7 +83,7 @@ var Component = {
 		  * Prepare item
 		  */
 
-		item.addClass("dropdown");
+		item.addClass("label");
 
 		/* Button */
 

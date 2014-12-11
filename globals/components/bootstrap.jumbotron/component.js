@@ -80,7 +80,7 @@ var Component = {
 	  * (get) primary return function
 	  */
 
-	get: function(parent, item, params) {
+	get: function(parent, item, params, controller) {
 
 		/** Initialize */
 
@@ -94,6 +94,8 @@ var Component = {
 		item.append($("<h1>").append(params.default ? params.default : params.title));
 
 		item.append($("<p>").append(params.message));
+
+		item.append(controller.append(item, params));
 
 	
 		return item;

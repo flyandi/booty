@@ -87,6 +87,7 @@ var Component = {
 		/* Bind events */
 		bar.bind({
 			after: function() {
+
 				$(this).find("[data-target=sidebar]").metisMenu();
 
 			},
@@ -128,25 +129,36 @@ var Component = {
 
 	__renderItem: function(container, item, level) {
 
-		item = $.extend({}, {label: false, href: false, active: false, items: false, use: true}, item);
+		item = $.extend({}, {search: false, label: false, href: false, active: false, items: false, use: true}, item);
 
 		if(item.use === false || level > 2) return;
 
 
-		var link = $("<a>").attr(item.href ? {href: item.href} : {"data-target": "#"}).append(this.__icon(item.icon)).append("&nbsp;").append(item.label).appendTo(container);
+		switch(true) {
 
-		this.__common(container, item, {align: false});
+			case item.search:
 
-		if(Booty.$.is.array(item.items)) {
+				break;
 
-			/**
-			 * (level split)
-			 */
+			default:
 
-			 link.append($("<span>").addClass("fa arrow"));
+				var link = $("<a>").attr(item.href ? {href: item.href} : {"data-target": "#"}).append(this.__icon(item.icon)).append("&nbsp;").append(item.label).appendTo(container);
 
-			 this.__render(container, item.items, {level: level + 1});
+				this.__common(container, item, {align: false});
 
+				if(Booty.$.is.array(item.items)) {
+
+					/**
+					 * (level split)
+					 */
+
+					 link.append($("<span>").addClass("fa arrow"));
+
+					 this.__render(container, item.items, {level: level + 1});
+
+				}
+
+				break;
 		}
 	},
 
