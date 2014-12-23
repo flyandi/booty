@@ -362,7 +362,7 @@ class Resources extends Primitive {
 
 		// prepare request
 		$request = DefaultValue($request, GetRequest(1));
-
+		
 		// switch resource requester
 		switch(true) {
 
@@ -400,6 +400,9 @@ class Resources extends Primitive {
 						break;
 					}
 				}
+
+				// no resources handled
+				Error::handle(BOOTY_ERROR_404NOTFOUND, false, HTTP::http404);
 				break;
 		}
 	}

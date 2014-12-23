@@ -80,20 +80,27 @@ class Error extends Primitive {
 		return DefaultValue($BOOTY_GLOBAL->definitions->error->{$error}, null);
 	}
 
+
     /** 
 	 * (handle) handles an error
 	 *
      * @param error 	An error number 
 	*/
 
-	static public function handle($error, $description = false) {
+	static public function handle($error, $description = false, $httpcode = false) {
 		// globals
 		global $BOOTY_GLOBAL;
 
 		// check error configuration
 		self::message(
+			// message
 			DefaultValue(self::description($error), ""), 
-			FillVariableString(DefaultValue($description ? $description : @$BOOTY_GLOBAL->error->description, ""), array($error))
+			// description
+			FillVariableString(DefaultValue($description ? $description : @$BOOTY_GLOBAL->error->description, ""), array($error)),
+			// code
+			false,
+			// http code
+			$httpcode ? $httpcode : HTTP::http501
 		);
 
 	}

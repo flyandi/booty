@@ -64,7 +64,6 @@ interface FilesMimeType {
 	const pptx = "application/vnd.ms-powerpoint";
 	const rtf = "application/rtf";
 	const pdf = "application/pdf";
-	const woff = "application/font-woff";
 	const zip = "application/zip";
 	const tar = "application/x-tar";
 	const swf = "application/x-shockwave-flash";
@@ -96,6 +95,12 @@ interface FilesMimeType {
 	const mov = "video/quicktime";
 	const mp3 = "audio/mpeg";
 	const wav = "audio/wav";
+
+	// Font types
+	const ttf = "font/truetype";
+	const otf = "font/opentype";
+	const eot = "application/vnd.ms-fontobject";
+	const woff = "application/x-font-woff";
 }
 
 

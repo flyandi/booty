@@ -4,9 +4,9 @@
  * @version: v1.0.0
  * @author: Andy Gulley
  *
- * Created by Andy Gulley. Please report any bug at http://github.com/flyandi/booty
+ * Created by Andy Schwarz-Gulley. Please report any bug at http://github.com/flyandi/booty
  *
- * Copyright (c) 2014 Andy Gulley http://github.com/flyandi
+ * Copyright (c) 2014 Andy Schwarz-Gulley http://github.com/flyandi
  *
  * The MIT License (http://www.opensource.org/licenses/mit-license.php)
  *
@@ -47,8 +47,8 @@ interface ComponentsPath {
 
 
 /** 
-  * (class) View
-  * Manages a view
+  * (class) Components Parser
+  * Manages a components document
   */
 
 class Components extends Primitive {
@@ -69,10 +69,10 @@ class Components extends Primitive {
 	}
 
 	/** 
-	 * (output) returns the parsed and detected components
+	 * (parse) returns the parsed and detected components
 	 */
 
-	public function output($method = Output::html) {
+	public function parse($method = Output::html) {
 
 		// get buffer
 		$buffer = $this->buffer;
@@ -83,8 +83,11 @@ class Components extends Primitive {
 		// load the data
 		@$doc->loadHTML($buffer);
 
+		// get xpath
+		$xpath = new \DOMXPath($doc);
+
 		// execute query
-		$result = $doc->getElementsByTagName("component");	
+		$result = $xpath->query("//component");	
 
 		// cycle results
 		foreach($result as $element) {
@@ -92,6 +95,9 @@ class Components extends Primitive {
 			foreach($element->attributes as $name=>$node) {
 				// create
 				if($component = $this->create(Compare($name, "name") ? $node->nodeValue : $name)) {
+					// assign params
+					$component->set($this->__createParams($element));
+
 					// replace component
 					if($replace = $component->output($method)) {
 						// create fragment
@@ -100,6 +106,8 @@ class Components extends Primitive {
 						$fragment->appendXml($replace);
 						// replace the node
 						$element->parentNode->replaceChild($fragment, $element);
+
+						break;
 					}
 				}
 			}
@@ -143,10 +151,9 @@ class Components extends Primitive {
 	public function create($name) {
 		// find components
 		if($path = $this->find($name)) {
-			// got the path now load the component
+			// create component
 			return new Component($path);
 		}
-
 		// not exist
 		return false;
 	}
@@ -159,5 +166,71 @@ class Components extends Primitive {
 	public function has($type) {
 		
 	}
+
+
+	/** 
+	  * (__createParams) converts a DOMElement Component to an params array list
+	  */
+
+	public function __createParams($element) {
+		
+		$result = array();
+
+		// macro
+		$__attributes = function($node) {
+			// return value
+			$value = false;
+			// sanity check
+			if(isset($node->attributes)) {
+				// get node
+				$value = $node->attributes->length != 0 ? array("default" => $node->nodeValue) : $node->nodeValue;
+
+				// cycle attributes
+				if($node->attributes->length != 0) {
+					foreach($node->attributes as $name => $attr) {
+						$value[$name] = $attr->nodeValue;
+					}
+				}
+			}
+			// return value
+			return $value;
+		};
+
+		foreach($element->childNodes as $child) {
+
+				// sanity check
+			if(get_class($child) == "DOMElement") {
+				// intialize
+				$value = false;
+
+				// switch
+				switch(true) {
+
+					case $child->hasChildNodes():
+
+						$value = array();
+
+						foreach($child->childNodes as $node) {
+							if(get_class($node) == "DOMElement") {
+								$value[] = $__attributes($node);
+							}
+						}
+
+						if(count($value) > 0) break;
+
+					default:
+						$value = $__attributes($child);
+						break;
+				}
+
+				// assign
+				$result[$child->tagName] = $value;
+			}
+		}
+
+		// return result	
+		return $result;
+	}
+
 }
 

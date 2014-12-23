@@ -57,6 +57,8 @@ interface Output {
 	const json = 1;
 	const xml = 2;
 	const console = 3;
+	const api = 4;
+	const detect = -1;
 }
 
 /** 
@@ -89,10 +91,10 @@ class Application extends Primitive {
 		$this->resources = new Resources($this->configuration->resources);
 
 		// view, holds the current representation
-		$this->view = new View();
+		$this->view = $this->invoke(new View(), array($this->resources));
 
 		// routes, manages routes
-		$this->routes = new Routes();
+		$this->routes = $this->invoke(new Routes(), array($this->resources));
 
 		// run registration
 		$this->__register();
@@ -133,10 +135,10 @@ class Application extends Primitive {
 	 *
 	 */
 
-	public function emit($output = Output::html) {
+	public function emit($output = Output::detect) {
 
 		// set output
-		$this->output = $output;
+		$this->output = $output == Output::detect ? $this->__detectOutput() : $output;
 
 		// process routes
 		$this->__handleRoutes();
@@ -186,14 +188,25 @@ class Application extends Primitive {
 		// process default routes
 		switch($request = GetDirVar(0, DefaultRoutes::root)) {
 
+			// (System)
+			case DefaultRoutes::system:
+				// let the system handle this
+				System::handleRequest(false, $this->context(), $this->output, $this);
+				break;
+
 			// (Resources)
 			case DefaultRoutes::resources: 
 				// let resources handle this request
 				Resources::handleRequest($this->location, $this->context());
 				break;
 
+			// (View)
+			/*case DefaultRoutes::view:
+				// let 	
 
-			// (Process other)
+				break;*/
+
+			// (Process view)
 			default:
 
 				// nothing else is defined, pass to applicaton
@@ -221,6 +234,31 @@ class Application extends Primitive {
 
 		// check view
 		switch($this->output) {
+
+			// api
+			case Output::api:
+
+				switch(true) {
+
+
+					case Api::instance()->hasaction():
+
+						break;
+
+					default:
+
+						if(!Api::instance()->has()) {
+							$this->view->output(Output::api);
+						}
+
+						break;
+				}
+
+				// outp
+				Api::instance()->emit();
+
+				break;
+
 
 			// html
 			case Output::html:
@@ -264,6 +302,31 @@ class Application extends Primitive {
 
 		}
 
+
+	}
+
+
+	/** 
+	 * (__detectOutput)  
+	 * detects the output method
+	 *
+	 */
+
+	private function __detectOutput() {
+
+		switch(true) {
+
+			// (api)
+			case Compare(GetServerVar("REQUEST_METHOD"), "api"):
+			case Compare(GetHTTPHeaderVar("bootyrequest", false), "api"):
+				return Output::api;
+				break;
+
+
+			default:
+				return Output::html;
+				break;
+		}
 
 	}
 }

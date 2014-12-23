@@ -37,6 +37,7 @@
   * (spl_autoload_register)
   */
 spl_autoload_register(function($className) {
+
 	if($className[0] == '\\') {
 		$className = substr($className, 1);
 	}
@@ -46,8 +47,10 @@ spl_autoload_register(function($className) {
 
 	// check handler
 	switch(true) {
+
 		// Framework Namespace
-		case stripos($className, "Framework\\") !== 0:
+		case stripos($className, "Booty\\View") !== false:
+		case stripos($className, "Booty\\Framework") !== false:
 			$classPath = lcfirst(strtr(substr($className, strpos($className, "Booty\\") + 6), "\\", "/")) . ".php";
 			break;
 

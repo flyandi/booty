@@ -38,6 +38,7 @@ namespace Booty\Framework;
   * (constants)
   */
 
+define("BOOTY_TAG_IDENT", "booty-");
 
 /**
   * (Enums)
@@ -48,6 +49,11 @@ interface HTMLMedia {
 	const screen = "screen";
 }
 
+
+interface HTMLValues {
+	const true = "true";
+	const false = "false";
+}
 
 
 /** 
@@ -65,6 +71,16 @@ class HTML extends Primitive {
 	public function __construct() {
 
 
+	}
+
+
+	/** 
+	 * (Tag) Creates a tag
+	 *
+	 */
+
+	static public function Tag($name, $attributes = false, $content = null) {
+		return Tag(BOOTY_TAG_IDENT . $name, $attributes, $content, $content == null);
 	}
 
 

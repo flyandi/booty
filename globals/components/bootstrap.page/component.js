@@ -88,7 +88,7 @@ var Component = {
 		  * Prepare item
 		  */
 
-		item.addClass("page").attr($.extend({}, {
+		item.addClass("page container").attr($.extend({}, {
 			role: 'presentation'
 		}, params.id ? {id: params.id} : false)).appendTo(item);
 
@@ -130,6 +130,8 @@ var Component = {
 		switch(true) {
 
 			case Booty.$.is.array(content):
+
+
 
 				break;
 

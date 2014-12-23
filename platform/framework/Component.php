@@ -67,6 +67,9 @@ class Component extends Primitive {
 
 	public function __construct($location) {
 
+		// register params
+		$this->params = array();
+
 		// bridge
 		$this->location = $location;
 
@@ -79,20 +82,43 @@ class Component extends Primitive {
 	 * (output) returns the parsed and detected components
 	 */
 
-	public function output($method = Output::html) {
+	public function output($process = false, $method = Output::html) {
 
-		// prepare script
-		$script = $this->has(ComponentFiles::js) ? new Script($this->assets[ComponentFiles::js]) : false;
-
-
-		// switch by output mode
 		switch($method) {
+
+			case Output::api:
+
+				Api::instance()->reset();
+
+				if($this->has(ComponentFiles::js)) {
+
+					return Api::instance()->prepare(ApiStatus::ok, Extend(array(
+						// prepare script
+						"script" => PrepareScript($this->assets[ComponentFiles::js])
+					), json_decode(@$this->assets[ComponentFiles::json])));
+
+				}
+
+				return Api::instance()->status(ApiStatus::error);
+
+				break;
+
 
 			case Output::html:
 
-				// safety check
-				if($script) {
-					return $script->output("Component", $method);
+				// switch true
+				switch(true) {
+
+					case $process:
+						// prepare script
+						$script = $this->has(ComponentFiles::js) ? new Script($this->assets[ComponentFiles::js]) : false;
+
+						// safety check and passthrough
+						if($script) { 
+							return $script->output("Component", $this->params, $method);
+						}
+
+						break;
 				}
 
 				break;
@@ -100,6 +126,19 @@ class Component extends Primitive {
 
 		// return false
 		return false;
+	}
+
+
+	/** 
+	  * (set) sets the parameters
+	  */
+
+	public function set($name, $value = null) {
+		// verify
+		if(!is_array($name)) $name = array($name => $value);
+
+		// set params
+		$this->params = array_merge($this->params, $name);
 	}
 
 

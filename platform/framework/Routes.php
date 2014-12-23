@@ -49,6 +49,8 @@ namespace Booty\Framework;
 interface DefaultRoutes {
 	const root = "/";
 	const resources = "resources";
+	const system = "$";
+	const application = "*";
 }
 
 /** 

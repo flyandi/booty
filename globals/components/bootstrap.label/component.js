@@ -57,11 +57,16 @@ var Component = {
 		id: false,
 
 		/**
-		  * (label) the label of the dropdown
+		  * (text) the text of the label
 		  */
 
-		label: false,
+		text: false,
 
+		/**
+		  * (size) size of the label
+		  */
+
+		size: TextSize.p,
 		
 
 	},
@@ -76,51 +81,13 @@ var Component = {
 		  * Initialize
 		  */
 
-
 		params = $.extend({}, this.defaults, params);
 
 		/**
 		  * Prepare item
 		  */
 
-		item.addClass("label");
-
-		/* Button */
-
-		var button = $("<button>").addClass("btn btn-default dropdown-toggle").attr($.extend({}, {
-			"aria-expanded": "true",
-			"data-toggle": "dropdown",
-			type: "button"
-		}, params.id ? {id: params.id} : false)).appendTo(item);
-
-		button.append($("<l>").append(params.default ? params.default : params.label)).append($("<span>").addClass("caret"));
-
-		/* prepare items */
-		var list = $("<ul>").addClass("dropdown-menu").attr({
-			role: "menu",
-			"aria-labelledby": params.id,
-		}).appendTo(item);
-
-		$.each(params.items, function(index, item) {
-
-			switch(true) {
-
-				case Booty.$.is.string(item): item = {label: item}; break;
-
-			}
-
-			/* defaults */
-			item = $.extend({}, {tabIndex: -1, href: false, label: false}, item);
-
-			/* link */
-			var link = $("<a>").attr($.extend({}, {role: "menuitem", tabindex: item.tabIndex}, 
-				item.href ? {href: item.href} : {}
-			)).append(item.default ? item.default : item.label);
-
-			list.append($("<li>").attr("role", "presentation").append(link));
-		});
-		
-		return item;
+		return $("<" + params.size + ">").append(params.text);
 	}
 
 };

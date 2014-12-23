@@ -63,6 +63,7 @@ class HTTP extends Primitive {
 	const http404 = "404 Not Found";
 	const http500 = "500 Internal Server Error";
 	const http501 = "501 Not Implemented";
+	const http260 = "260 API";
 
 
 	/** 
@@ -121,7 +122,7 @@ class HTTP extends Primitive {
 	  * @param mime 			The HTTP mime type
 	  */
 
-	static public function Output($buffer, $mime = FilesMimeType::plain, $compress = false, $headers = false, $terminate = true) {
+	static public function Output($buffer, $mime = FilesMimeType::plain, $compress = false, $headers = false, $terminate = true, $status = HTTP::http200, $version = HTTP::version11) {
 		// get headers
 		if(!$headers || !is_array($headers)) $headers = Self::HeadersNoCache();
 
@@ -169,11 +170,11 @@ class HTTP extends Primitive {
 			}
 
 			// adjust header
-			$headers['Content-Length'] = is_string($buffer) ? strlen($buffer) : sizeof($buffer);
+			//$headers['Content-Length'] = is_string($buffer) ? strlen($buffer) : sizeof($buffer);
 			$headers['Content-Type'] = $mime;
 
 			// emit headers
-			self::Header($headers);
+			self::Header($headers, $status, $version);
 
 			// emit content
 			echo $buffer;

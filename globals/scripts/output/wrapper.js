@@ -31,20 +31,33 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
+
 /**
-  * Wrapper 
+  * Wrapper Environment 
   */
 
-  console.log(process.cwd());
-
-require("../resources/jquery/jquery.js");
+var env = require("jsdom").env;
 
 
-console.log('in wrapper');
+/** 
+  * (Execution)
+  */
 
+env("<html></html>", function(errors, window) {
 
+	/** 
+	  * (jQuery)
+	  */
 
+	global.$ = require("jquery")(window);
 
+	/**
+	  * (Pass to Wrapper)
+	  */
 
-
+	if(typeof(wrapper) == "function") {
+		
+		console.log(wrapper());
+	}
+});
 

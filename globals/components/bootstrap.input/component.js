@@ -62,6 +62,26 @@ var Component = {
 
 		label: false,
 
+		/**
+		  * (placeholder) the placeholder
+		  */
+
+		placeholder: false,
+
+		/** 
+		  * (addon)
+		  */
+
+		after: false,
+		before: false,
+
+
+		/** 
+		  * (size)
+		  */
+
+		size: Size.normal,
+
 	},
 
 	/**
@@ -81,44 +101,45 @@ var Component = {
 		  * Prepare item
 		  */
 
-		item.addClass("input");
+		item.addClass("input-group");
 
-		/* Button */
+		if(params.size) item.addClass("input-group" + params.size);
 
-		var button = $("<button>").addClass("btn btn-default dropdown-toggle").attr($.extend({}, {
-			"aria-expanded": "true",
-			"data-toggle": "dropdown",
-			type: "button"
-		}, params.id ? {id: params.id} : false)).appendTo(item);
 
-		button.append($("<l>").append(params.default ? params.default : params.label)).append($("<span>").addClass("caret"));
+		if(params.before) this.addons(item, params.before);
 
-		/* prepare items */
-		var list = $("<ul>").addClass("dropdown-menu").attr({
-			role: "menu",
-			"aria-labelledby": params.id,
-		}).appendTo(item);
+		var input = $("<input>").addClass("form-control").appendTo(item);
 
-		$.each(params.items, function(index, item) {
+		if(params.label) item.prepend($("<span>").addClass("input-group-addon inputlabel").append($("<l>").append(params.label)));
 
-			switch(true) {
+		if(params.placeholder) input.attr("placeholder", params.label);
 
-				case Booty.$.is.string(item): item = {label: item}; break;
+		if(params.add) this.addons(item, params.add);
 
-			}
+		if(params.storage) {
+			input.attr("data-storage", params.storage);
 
-			/* defaults */
-			item = $.extend({}, {tabIndex: -1, href: false, label: false}, item);
-
-			/* link */
-			var link = $("<a>").attr($.extend({}, {role: "menuitem", tabindex: item.tabIndex}, 
-				item.href ? {href: item.href} : {}
-			)).append(item.default ? item.default : item.label);
-
-			list.append($("<li>").attr("role", "presentation").append(link));
-		});
+			if(params.storagedata !== null) input.val(params.storagedata);
+		}
 		
 		return item;
-	}
+	},
+
+	/**
+	  * (addons)
+	  */
+
+	addons: function(item, values) {
+
+		if(!Booty.$.is.array(values)) values = [values];
+
+		values.forEach(function(s) {
+
+			if(Booty.$.is.string(s)) {
+				item.append($("<span>").addClass("input-group-addon").append(s));
+			}
+		});
+
+	},
 
 };

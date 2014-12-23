@@ -35,20 +35,56 @@
    * HTML Output Wrapper
    */
 
+/**
+  * Wrapper Execution
+  */
 
 require("../globals/scripts/output/wrapper.js");
+
+/**
+  * Support Library
+  */
+
+require("../resources/booty/js/library/Helpers.js");
+
 
 /**
   * Runtime 
   */
 
+var wrapper = function() {
 
-(function() {
-	if(typeof({class}.html) == "function") {
-		console.log({class}.process());
+	if(typeof({class}.get) == "function") {
+
+		/**
+		  * Initialize
+		  */
+
+		var result = false;
+
+		/** 
+		  * Process class 
+		  */
+
+		var element = {class}.get(false, $("<div>"), {data});
+
+		/**
+		  * Process results
+		  */
+
+		switch(true) {
+
+			case typeof element == "object":
+				result = $('<div>').append(element.clone()).html();
+				break;
+		}
+
+		return result;
+
 	}
-})();
 
+	return false;
+};
 
 
 

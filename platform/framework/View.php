@@ -55,10 +55,17 @@ interface ViewPath {
   */
 
 interface ViewFiles {
-	const js = "view.js";
-	const php = "view.php";
-	const template = "view.template";
-	const json = "view.json";
+	const js = ".js";
+	const php = ".php";
+	const template = ".template";
+	const json = ".json";
+	const _default = "default";
+}
+
+interface ViewRoutes {
+	const _default = "default";
+	const action = "action";
+
 }
 
 
@@ -75,6 +82,8 @@ class View extends Primitive {
 
 	private $configuration = false;
 	private $assets = array();
+	private $name = false;
+	private $action = false;
 
 	/** 
 	 * (__construct
@@ -96,25 +105,101 @@ class View extends Primitive {
 		// switch by output mode
 		switch($method) {
 
+
+			/** 
+			  * API Output
+			  */
+
+			case Output::api:
+
+				// reset api session
+				Api::instance()->reset();
+
+				switch(true) {
+
+					/** 
+					  * (Action)
+					  */
+
+					case GetVar(ViewRoutes::action, false) !== false:
+
+						// process the external library 
+						$result = $this->__process(GetVar(ViewRoutes::action));
+
+						// validate result
+						if(is_object($result)) {	
+
+							// return api content
+							return Api::instance()->prepare(ApiStatus::ok, (array) $result);
+
+						}
+
+						break;
+
+
+					default:
+						// requires a javascript file
+						if($this->has(ViewFiles::js)) {
+
+							return Api::instance()->prepare(ApiStatus::ok, Extend(array(
+
+								// type
+								"type" => "View",
+							
+								// prepare source
+								"source" => PrepareScript($this->asset(ViewFiles::js)),
+
+							), json_decode($this->asset(ViewFiles::json))));
+
+						}
+
+						break;
+				}
+
+				return Api::instance()->status(ApiStatus::error);
+
+
+				break;
+			/**
+			  * HTML Output
+			  */
+
 			case Output::html:
+				// check javascript
+				switch(true) {
+					// check javascript
+					case $this->has(ViewFiles::js):
 
-				// check
-				if($this->has(ViewFiles::template)) {
+						// register tag
+						return HTML::Tag("script", array(
+							"type" => "View",
+							"source" => PrepareScript($this->asset(ViewFiles::js)),
+							"invoke" => HTMLValues::true,
+						));
 
-					// create new template
-					$template = new Template($this->assets[ViewFiles::template]);
+						break;
 
-					// bind data groups
-					$template->bind(); 
 
-					// process template
-					$buffer = $template->output();
+					// check template
+					case $this->has(ViewFiles::template):
 
-					// process components
-					$buffer = $this->__components($buffer);
+						// create new template
+						$template = new Template($this->asset(ViewFiles::template));
 
-					// process template
-					return $buffer;
+						// bind data groups
+						$template->bind(); 
+
+						// process template
+						$buffer = $template->output();
+
+						// process components
+						$buffer = $this->__components($buffer);
+
+						// process template
+						return $buffer;
+						
+						break;
+
 				}
 
 				break;
@@ -123,11 +208,42 @@ class View extends Primitive {
 	}
 
 	/** 
+	  * (assets) returns the actual assets
+	  */
+
+	public function asset($type, $default = false) {
+
+		// check
+		foreach(array($this->action, $this->name, ViewRoutes::_default) as $name) {
+
+			// asset filename
+			$fn = $name.$type;
+
+			if(isset($this->assets[$fn]) && file_exists($this->assets[$fn])) {
+				return file_get_contents($this->assets[$fn]);
+			}
+		}
+
+		return $default;
+	}
+
+	/** 
 	  * (has) returns true if a view was loaded
 	  */
 
 	public function has($type) {
-		return isset($this->assets[$type]) && $this->assets[$type] !== false;
+
+		return $this->assets($type) !== false;
+	}
+
+
+	/**
+	  * (route) initializes the view based on routes
+	  */
+
+	public function route($default = ViewRoutes::_default) {
+		// set from route
+		$this->set(GetDirVar(0, $default), GetDirVar(1, false));
 	}
 
 
@@ -136,9 +252,12 @@ class View extends Primitive {
 	 * sets the view's resources
 	 */
 
-	public function set($name) {
+	public function set($name, $action = false) {
 		// find the view and register
-		return $this->find($name, true);
+		if($this->find($name)) {
+			$this->name = $name;
+			$this->action = $action;
+		}
 	}
 
 	/** 
@@ -146,7 +265,8 @@ class View extends Primitive {
 	 * Finds a view
 	 */
 
-	public function find($name, $register = false) {
+	public function find($name) {
+
 		// find view in application and globals
 		foreach(array(
 			// Application Resources
@@ -157,10 +277,10 @@ class View extends Primitive {
 			// check if paths exists
 			if(is_dir($path . $name)) {
 				// we got a view, register view files
-				return $register ? $this->__register($path . $name) : $path . $name;
+				return $this->__register($path . $name);
 			}
 
-		}	
+		}
 		// return error
 		return false;	
 	}
@@ -172,14 +292,22 @@ class View extends Primitive {
 	 */
 
 	private function __register($path) {
+
 		// reset
 		$this->assets = array();
 
-		// load assets
-		foreach(array(ViewFiles::template, ViewFiles::php, ViewFiles::js, ViewFiles::json) as $f) {
-			// load and assign
-			$this->assets[$f] = file_exists($path . "/" .$f) ? file_get_contents($path . "/" . $f) : false;
+		// read path
+		$filer = new Files();
+
+		// clear
+		$this->assets = array();
+
+		// assign assets
+		foreach($filer->get($path, FilesFilters::onlyfiles) as $path) {
+			$this->assets[basename($path)] = $path;
 		}
+
+		return count($this->assets) != 0;
 	}
 
 
@@ -193,7 +321,29 @@ class View extends Primitive {
 		$c = new Components($buffer);
 
 		// pass buffer
-		return $c->output();
+		return $c->parse();
+	}
+
+	/**
+	 * (__process)
+	 * Processes the outside script
+	 */
+
+	private function __process($action = false, $output = false) {
+
+		if($this->has(ViewFiles::php)) {
+
+			// prepare 
+			$instance = new Subclass($this->asset(ViewFiles::php));
+
+			// return
+			return $instance ? $instance->process($action) : false;
+
+		}
+		
+		return false;
+
+		
 	}
 
 	

@@ -47,6 +47,11 @@ interface ScriptWrapper {
 
 }
 
+interface ScriptTypes {
+
+	const view = "view";
+}
+
 
 /** 
   * (class) Script
@@ -76,16 +81,17 @@ class Script extends Primitive {
 	 * (output)
 	 */
 
-	public function output($class = false, $method = Output::html) {
+	public function output($class = false, $data = false, $method = Output::html) {
 		// get buffer
 		$buffer = $this->content;
 
 		// switch by method
 		switch($method) {
+
 			// html
 			case Output::html: 
 				// append html output routine
-				$buffer .= $this->__load($class, ScriptWrapper::html);
+				$buffer .= $this->__load($class, $data, ScriptWrapper::html);
 
 				// pass to nodejs
 				if($result = $this->__execute($buffer)) {
@@ -123,13 +129,16 @@ class Script extends Primitive {
 	 * (__load)
 	 */
 
-	private function __load($class, $wrapper) {
+	private function __load($class, $data, $wrapper) {
 		// load wrapper
 		$buffer = file_get_contents($wrapper);
 
 		// replace class
 		$buffer = str_replace(VARIABLE_FIELD_BEGIN . "class" .VARIABLE_FIELD_END, $class, $buffer);
 
+		// replace data
+		$buffer = str_replace(VARIABLE_FIELD_BEGIN . "data" . VARIABLE_FIELD_END, json_encode($data), $buffer);
+		
 		// return buffer
 		return $buffer;
 	}

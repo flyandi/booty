@@ -71,10 +71,15 @@ function DefaultValue($value, $default = null){
  */ 
 
 function GetVar($name, $default = null) {
+
 	// cycle environment buckets
 	foreach(array($_REQUEST, $_COOKIE, $_GET, $_POST, $GLOBALS) as $x=>$n) {
 		if(isset($n[$name])) return $x == 2 ? urldecode($n[$name]) : $n[$name];
 	}
+	// parse raw stream
+	parse_str(file_get_contents("php://input"), $raw);
+	if(isset($raw[$name])) return $raw[$name];
+
 	// nothing matched
 	return $default;
 }	
@@ -152,7 +157,7 @@ function GetDirVar($index=0, $default = null, $path = false) {
  * @param prepend 		If set to true, will add a slash before the path
  */ 
 
-function GetRequest($index = 0, $prepend = true){
+function GetRequest($index = 0, $prepend = true, $removequery = true){
 	// initialize
 	$result = false;
 	// parse request
@@ -165,10 +170,47 @@ function GetRequest($index = 0, $prepend = true){
 		if(is_array($d) && isset($d[$index])) {
 			$result = $d[$index];
 		}
+
+		// removequery
+		if($removequery) {
+			$pos = stripos($result, "?");
+			if($pos !== false) {
+				$result = substr($result, 0, stripos($result, "?"));
+			}
+		}
+
 	}
-	// return result
+	// finalize result
 	return ($prepend && substr($result, 0, 1) != "/" ? "/" : "") . $result;
-}	
+}
+
+
+/**
+  * (macro) ParseRequest
+  * Parses a request
+  *
+  * @param request 			The request string
+  */
+
+function ParseRequest($request, $asobject = true) {
+
+	$parts = explode("/", $request);
+
+	// shift
+	if($parts[0] == "/" || $parts[0] == "") array_shift($parts);
+
+
+	// initialize
+	$result = array(
+		"parts" => $parts,
+		"root" => $parts[0],
+		"action" => DefaultValue(@$parts[1], false),
+		"value" => DefaultValue(@$parts[2], false)
+	);
+
+	// return
+	return $asobject ? (object) $result : $result;
+}
 
 
 /** 
@@ -196,14 +238,14 @@ function SetServerVar($name, $value) {
 }
 
 /** 
- * (macro) GetHTTPVar
- * returns a variable from the incoming HTTP stack
+ * (macro) GetHTTPHeaderVar
+ * returns a variable from the incoming HTTP header
  *
  * @param name 			 	The name of the variable
  * @param default 			A default value
  */
 
-function GetHTTPVar($name, $default = null) {
+function GetHTTPHeaderVar($name, $default = null) {
 	if(function_exists("getallheaders")) {
 		$headers = getallheaders();
 		return isset($headers[$name])?$headers[$name]:$default;	
@@ -281,7 +323,7 @@ function GetQueryString($asarray = true, $withqm = false, $default = "", $fromst
 
 /*** 
  **
- ** Helpers: JSON
+ ** Helpers: JSON/JavaScript
  **
  **/
 
@@ -295,6 +337,24 @@ function GetQueryString($asarray = true, $withqm = false, $default = "", $fromst
 
 function JSJSONDecode($json, $assoc = false) {
 	return json_decode(preg_replace('/([{,])(\s*)([^"]+?)\s*:/','$1"$3":',str_replace(array("\n","\r"),"",$json)), $assoc);
+}
+
+
+/** 
+ * (macro) PrepareScript
+ * Prepares a script for transfer
+ */
+
+function PrepareScript($source, $type = false) {
+
+	// strip white space
+	$source = StripWhitespace($source, true, true);
+
+	// remove anchors
+	$source = str_replace(array("  ", "\t", "\r\n", "\r", "\n"), "", $source);
+
+	// return 
+	return base64_encode($source);
 }
 
 
@@ -324,6 +384,36 @@ function FillVariableString($string, $data, $simplematch = false, $st = VARIABLE
 	return $string;
 }
 
+/***
+ ** 
+ ** Helpers: Classes and Constants
+ **
+ **/
+
+
+/**
+ * (macro) ReverseConstant
+ * Returns the return name of the constant. Also can process classes and interface through
+ * reflection
+ *
+ * @param source 			The source
+ * @param value 			An optional query value
+ * 
+ */
+
+function ReverseConstant($source, $value = null) {
+
+	switch(true) {
+		case interface_exists($source):
+		case class_exists($source):
+			return DefaultValue(@array_flip((new \ReflectionClass($source))->getConstants())[$value], null);
+			break;
+	}
+
+	return false;
+}
+
+
 /*** 
  **
  ** Helpers: Arrays 
@@ -344,8 +434,8 @@ function Extend() {
 
 	// cycle
 	foreach(func_get_args() as $arr) {
-		if(is_array($arr)) {
-			$result = array_merge($result, $arr);
+		if(is_array($arr) || is_object($arr)) {
+			$result = array_merge($result, (array)$arr);
 		}
 	}
 
@@ -385,6 +475,22 @@ function TraverseArray($input, $handler) {
 	}
 }
 
+/** 
+ * (macro) ObtainArray
+ * Obtains an array from different data sources
+ *
+ * @param input 			Any array
+ * @param recursive
+ */ 
+
+function ObtainArray($input) {
+	// initialize result
+	$result = array();
+
+
+	// return result
+	return $result;
+}
 
 
 /*** 
@@ -428,6 +534,7 @@ function StringToBool($s) {
  * @param stripbreaklines	Set true to remove breaklines as well
  * @param stripcomments		Set true to remove comments as well
  */ 
+
 function StripWhitespace($source, $stripbreaklines = true, $stripcomments = false) {
 	// replace
 	foreach(array(
@@ -450,9 +557,38 @@ function StripWhitespace($source, $stripbreaklines = true, $stripcomments = fals
  *
  * @param s 				The source string
  */ 
+
 function IsLowerCase($s) {
 	return strtolower($s)===$s;
 }
+
+
+/** 
+ * (macro) Inbetween
+ * Returns a string between two strings
+ *
+ * @param start 			The start mark string
+ * @param end 				The end mark string
+ * @param str 				The string
+ */
+
+function Inbetween($start, $end, $str, $single = true){
+    $matches = array();
+    $regex = "/$start(.*?)$end/";
+    preg_match_all($regex, $str, $matches);
+    return $single && isset($matches[1][0]) ? $matches[1][0] : $matches;
+}
+
+
+/** 
+ * (macro) Guid
+ * Creates a generic UID
+ *
+ */
+
+function Guid() {
+	return md5(uniqid(rand(), true));
+}	
 
 
 

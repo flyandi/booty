@@ -40,10 +40,22 @@ namespace Booty\Framework;
 class Primitive {
 
 	/**
+	  * (static)
+	  */
+	
+	static $instance = null;
+
+	/**
 	  * (privates)
 	  */
 
 	private $implements = array();
+
+	/**
+	  * (public)
+	  */
+
+	public $context = false; 
 
 
 	/** 
@@ -92,7 +104,7 @@ class Primitive {
 
 	public function __call($name, $arguments) {
 		// set default
-		return count($arguments) != 0 ? $this->__set($name, $arguments[0]) : $this->__get($name);
+		return method_exists($this, $name) ? call_user_func_array($this->{$name}, $arguments) : (count($arguments) != 0 ? $this->__set($name, $arguments[0]) : $this->__get($name));
 	}
 
 	/** 
@@ -123,5 +135,52 @@ class Primitive {
 		return $default;
 	}
 
+
+	/**
+	  * (invoke)
+	  *
+	  * @param
+	  *
+	  */
+
+	public function invoke($class, $invokes) {
+
+		foreach($invokes as $invoke) {
+			// create path
+			$p = explode("\\", get_class($invoke));
+
+			// get name
+			$name = $p[count($p) - 1];
+
+			// verify
+			if(!isset($this->{$name})) {
+				// assign
+				$this->{$name} = $invoke;
+			}
+		}
+
+		return $class;
+	}
+
+
+	/**
+	  * (getInstance)
+	  *
+	  * Returns a singelton
+	  *
+	  * @param
+	  *
+	  */
+
+	static public function instance() {
+
+		if(self::$instance == null) {
+			// get class name
+			$name = get_called_class();
+			// initiate
+			self::$instance = new $name;
+		}
+		return self::$instance;
+	}
 
 }

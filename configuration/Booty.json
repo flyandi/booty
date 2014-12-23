@@ -88,7 +88,9 @@
 
 		"@jquery": ["jquery"],
 
-		"@bootstrap": ["bootstrap/js", "bootstrap/css"]
+		"@bootstrap": ["bootstrap/js", "bootstrap/css"],
+
+		"@booty": ["booty/js", "booty/css"]
 	},
 
 
@@ -125,7 +127,10 @@
 			/** (error codes) **/
 			"GENERAL": ["0x0001", "A general error occurred"],
 			"NOAPPLICATION": ["0x0002", "Captain, we don't have anything to run here."],
-			"NOENDPOINT": ["0x0003", "There is nothing else here to be found."]
+			"NOENDPOINT": ["0x0003", "There is nothing else here to be found."],
+
+			/** (http error codes) **/
+			"404NOTFOUND": ["0x10404", "The requested file was not found.", "http404"]
 		}
 
 	},

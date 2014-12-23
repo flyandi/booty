@@ -96,12 +96,17 @@ class Applications extends Primitive {
 
 			// cycle map 
 			foreach($map as $application) {
+				
 				// initialize
 				$detected = false;
+
 				// item
 				$item  = $application->_;
+
 				// run match filters
 				foreach(array(
+					// host filters
+
 					"host"=>function($b) {
 						return fnmatch($b, GetServerVar("HTTP_HOST"));
 					}
