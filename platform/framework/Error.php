@@ -69,7 +69,7 @@ class Error extends Primitive {
 	 * (raiseInContext) raises an error within the context
 	 */
 
-	static public raiseInContext($context, $error, $description = false) {
+	static public function raiseInContext($context, $error, $description = false) {
 
 		if(is_class($context)) {
 
