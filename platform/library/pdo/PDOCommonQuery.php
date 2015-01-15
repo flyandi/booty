@@ -226,4 +226,20 @@ abstract class CommonQuery extends BaseQuery {
 		$statement = preg_replace('~(?:\\b[a-z_][a-z0-9_.:]*[.:])?([a-z_][a-z0-9_]*)[.:]([a-z_*])~i', '\\1.\\2', $statement);
 		return $statement;
 	}
+
+
+	/** 
+	 * (notfound) 
+	 */
+
+	public function notfound($callback) {
+
+		var_dump($this->count());
+
+		var_dump($this);
+
+
+		var_dump("NOTFOUND");
+
+	}
 }

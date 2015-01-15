@@ -78,6 +78,11 @@ class DB extends Primitive {
 	const success = true;
 	const failed = false;
 
+	// Default fields
+	const idstring = 'idstring';
+	const id = 'idstring';
+
+
 	/** 
 	 * (__construct) 
 	 *
@@ -125,6 +130,16 @@ class DB extends Primitive {
 		}
 	}
 
+	/** 
+	 * (Magics)
+	 */
+
+	public function __call($name, $arguments) {
+
+		return call_user_func_array($this->builder->{$name}, $arguments);
+
+	}
+
 
 	/**
 	 * (PDO Mappings) static mappings to the builder
@@ -136,12 +151,17 @@ class DB extends Primitive {
 	}
 
 	static public function create($table, $values = array()) {
-		return DB::instance()->builder->create($table, $values);
-		
+		return DB::instance()->builder->create($table, $values)->push();
 	}
 
-	static public function select($table) {
+	static public function find($table) {
 		return DB::table($table);
+	}
+
+	static public function get($table, $id = false, $create = true) {
+		return DB::instance()->builder->from($table)->select(array(DB::id => ($id ? $id : null)))->notfound(function($query) {
+			return DB::create(TABLE_CAMPAIGNS);
+		});
 	}
 }
 

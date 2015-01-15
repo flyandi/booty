@@ -33,6 +33,12 @@ class InsertQuery extends BaseQuery {
 		return false;
 	}
 
+	public function push() {
+		$this->execute();
+
+		return $this;
+	}
+
 	/** Add ON DUPLICATE KEY UPDATE
 	 * @param array $values
 	 * @return \InsertQuery
