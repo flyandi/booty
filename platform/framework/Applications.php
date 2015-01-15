@@ -110,6 +110,7 @@ class Applications extends Primitive {
 					"host"=>function($b) {
 						return fnmatch($b, GetServerVar("HTTP_HOST"));
 					}
+
 				) as $key=>$fn) {
 					if(isset($item[$key])) {
 						// initialize
@@ -168,14 +169,16 @@ class Applications extends Primitive {
 			}
 
 			// create class
-			$this->application = new \Application\Application(
-				// origin
-				dirname($filename),
-				// configuration
-				$configuration
-			);
+			$this->application = Application::instance(function() use($filename, $configuration) {
+				return new \Application\Application(
+					// origin
+					dirname($filename),
+					// configuration
+					$configuration
+				);
+			});
 
-			
+		
 		}
 	}
 

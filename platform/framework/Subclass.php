@@ -65,6 +65,7 @@ class Subclass {
 
 		// create classname
 		$name = "SubClass" . Guid();
+		$namepath = sprintf("\\Booty\\Framework\\%s", $name);
 
 		// prepare object
 		$class = trim(str_replace(array("<?php", "?>"), "", str_replace(
@@ -73,12 +74,59 @@ class Subclass {
 			$class
 		)));	
 
-		var_dump($class);
 
 		// create object
-		eval($class);
+		$this->__class = eval($class);
+
+		// create subclass
+		$this->__class = new $namepath();
+	}
+
+	/** 	
+	 * default (__get)  
+	 * 
+     * @param name 		Name of the local variable
+	*/
+
+	public function __get($name) {
+		// return default
+		return isset($this->{$name}) ? $this->{$name} : $this->__retrieve($name, null);
+	}
+
+	/** 
+	 * default (__set)  
+	 * 
+     * @param name 		Name of the local variable
+     * @param value 	New value of local variable
+	*/
+
+	public function __set($name, $value) {
+		// set 
+		$this->{$name} = $value;
+	}
+
+	/** 
+	 * default (__call)  
+	 * 
+     * @param name 		Name of the local variable
+     * @param arguments Arguments
+	*/
+
+	public function __call($name, $arguments = false) {
+		// set default
+		return method_exists($this->__class, $name) ? call_user_func_array(array($this->__class, $name), is_array($arguments) ? $arguments : array()) : null;
+	}
 
 
+	/** 
+	 * default (__retrieve)  
+	 * 
+     * @param name 		Name of the local variable
+     * @param arguments Arguments
+	*/
+
+	public function __retrieve($name, $arguments) {
+		return false;
 	}
 
 }

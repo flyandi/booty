@@ -115,6 +115,7 @@ class View extends Primitive {
 				// reset api session
 				Api::instance()->reset();
 
+
 				switch(true) {
 
 					/** 
@@ -123,8 +124,10 @@ class View extends Primitive {
 
 					case GetVar(ViewRoutes::action, false) !== false:
 
-						// process the external library 
-						$result = $this->__process(GetVar(ViewRoutes::action));
+						
+
+						// process the external library
+						$result = $this->__process(GetVar(ViewRoutes::action, false));
 
 						// validate result
 						if(is_object($result)) {	
@@ -337,7 +340,7 @@ class View extends Primitive {
 			$instance = new Subclass($this->asset(ViewFiles::php));
 
 			// return
-			return $instance ? $instance->process($action) : false;
+			return $instance ? $instance->{$action}((object)GetRawVar()) : false;
 
 		}
 		

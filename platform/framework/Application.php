@@ -72,9 +72,14 @@ class Application extends Primitive {
 	 * (private)
 	 */
 
-	private $configuration = false;
 	private $output = Output::html;
 	private $headers = array();
+
+	/**
+	  * (public)
+	  */
+
+	public $configuration = false;
 
 	/** 
 	 * (__construct) 
@@ -239,11 +244,6 @@ class Application extends Primitive {
 			case Output::api:
 
 				switch(true) {
-
-
-					case Api::instance()->hasaction():
-
-						break;
 
 					default:
 

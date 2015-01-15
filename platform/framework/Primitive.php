@@ -34,16 +34,11 @@
 
 namespace Booty\Framework;
 
+
 /**
   * (Primitive) Base class for all other classes
   */
-class Primitive {
-
-	/**
-	  * (static)
-	  */
-	
-	static $instance = null;
+class Primitive  {
 
 	/**
 	  * (privates)
@@ -164,23 +159,25 @@ class Primitive {
 
 
 	/**
-	  * (getInstance)
-	  *
-	  * Returns a singelton
-	  *
-	  * @param
-	  *
+	  * Singleton 
 	  */
 
-	static public function instance() {
+  	private static $instances = array();
 
-		if(self::$instance == null) {
-			// get class name
-			$name = get_called_class();
-			// initiate
-			self::$instance = new $name;
-		}
-		return self::$instance;
-	}
+	/**
+   	  * (instance)
+   	   */
+
+  	public static function instance($constructor = false) {
+    	// get class name
+    	$class = get_called_class();
+
+	    if(!isset(self::$instances[$class])) {
+	      	// check if singleton override hook exists - NEEDS IMPLEMENTATION
+	      	self::$instances[$class] = is_callable($constructor) ? $constructor() : new $class();
+	    }
+
+	    return self::$instances[$class];	
+  	}
 
 }

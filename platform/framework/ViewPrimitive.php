@@ -32,7 +32,8 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-namespace Booty\View;
+namespace Booty\Framework;
+
 
 /**
   * (ViewPrimitive) Base class for views

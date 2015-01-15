@@ -65,6 +65,25 @@ class Error extends Primitive {
 
 	}
 
+	/**
+	 * (raiseInContext) raises an error within the context
+	 */
+
+	static public raiseInContext($context, $error, $description = false) {
+
+		if(is_class($context)) {
+
+			$context->error = $error;
+			$context->errordescription = $description;
+
+			// set shortcut message
+			$context->raiseMessage = function() use ($this, $error, $message) {
+				$this->handle($error, $message);
+			}
+		}
+
+	}
+
 
 	/** 
 	 * (descriptions) returns a description
@@ -142,8 +161,8 @@ class Error extends Primitive {
 				)
 			)
 		));
-	}
-
-	
+	}	
 }
+
+
 

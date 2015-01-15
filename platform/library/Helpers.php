@@ -39,6 +39,7 @@
 	
 # General
 define("TAG_NOVALUE", null);
+define("RAW_VAR", "@RAW___VAR");
 
 
 /*** 
@@ -77,12 +78,25 @@ function GetVar($name, $default = null) {
 		if(isset($n[$name])) return $x == 2 ? urldecode($n[$name]) : $n[$name];
 	}
 	// parse raw stream
-	parse_str(file_get_contents("php://input"), $raw);
-	if(isset($raw[$name])) return $raw[$name];
-
-	// nothing matched
-	return $default;
+	return GetRawVar($name, $default);
 }	
+
+
+/**
+ * (macro) GetRawVar
+ * returns a variable from the raw input 
+ *
+ * @param name 				If given it returns only the variable for it
+ */
+
+function GetRawVar($name = false, $default = null) {
+
+	if(!isset($GLOBALS[RAW_VAR])) {
+		parse_str(file_get_contents("php://input"), $GLOBALS[RAW_VAR]);
+	}
+
+	return is_array($GLOBALS[RAW_VAR]) ? ($name === false ? $GLOBALS[RAW_VAR] : ($name !== false && isset($GLOBALS[RAW_VAR][$name]) ? $GLOBALS[RAW_VAR][$name] : $default)) : $default;
+}
 
 
 /** 
