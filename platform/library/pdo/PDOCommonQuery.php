@@ -4,6 +4,9 @@
  */
 abstract class CommonQuery extends BaseQuery {
 
+	/** publics */
+	public $table;
+
 	/** @var array of used tables (also include table from clause FROM) */
 	protected $joins = array();
 
@@ -233,13 +236,11 @@ abstract class CommonQuery extends BaseQuery {
 	 */
 
 	public function notfound($callback) {
+		if($this->count() == 0) {
+			return is_callable($callback) ? $callback() : false;
+		}
 
-		var_dump($this->count());
-
-		var_dump($this);
-
-
-		var_dump("NOTFOUND");
-
+		return $this;
 	}
+
 }

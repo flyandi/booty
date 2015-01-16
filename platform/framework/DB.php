@@ -66,10 +66,10 @@ interface DatabaseDriverError {
 class DB extends Primitive {
 
 	/** 
-	 * (privates)
+	 * (public)
 	 */
 
-	private $status = DatabaseStatus::disconnected;
+	public $status = DatabaseStatus::disconnected;
 
 	/**
 	 * (constants)
@@ -89,13 +89,12 @@ class DB extends Primitive {
      * Constructs the database object and opens a connection
      *
 	*/
-	public function __construct($connection = false, $callback = false) {
+	public function __construct($connection = false) {
 
 		// verify
 		if($this->status == DatabaseStatus::connected) return $this->status;
 
 		// initialize
-		$result = false;
 		$this->status = DatabaseStatus::invalid;
 
 		if(!is_array($connection)) {
@@ -135,9 +134,7 @@ class DB extends Primitive {
 	 */
 
 	public function __call($name, $arguments) {
-
 		return call_user_func_array($this->builder->{$name}, $arguments);
-
 	}
 
 
@@ -145,22 +142,34 @@ class DB extends Primitive {
 	 * (PDO Mappings) static mappings to the builder
 	 */
 
-	static public function table($table) {
+	static public function select($table) {
 		// connect to instance
 		return DB::instance()->builder->from($table);
 	}
 
 	static public function create($table, $values = array()) {
-		return DB::instance()->builder->create($table, $values)->push();
-	}
 
-	static public function find($table) {
-		return DB::table($table);
+		// create guid
+		$id = CreateGUID();
+
+		// insert
+		DB::instance()->builder->insertInto($table, array_merge(is_array($values) ? $values : array(), array(
+			"idstring" => $id
+		)))->execute();
+
+		// return select
+		return DB::select($table, $id);
 	}
 
 	static public function get($table, $id = false, $create = true) {
 		return DB::instance()->builder->from($table)->select(array(DB::id => ($id ? $id : null)))->notfound(function($query) {
 			return DB::create(TABLE_CAMPAIGNS);
+		});
+	}
+
+	static public function connect($dsn, $username = false, $password = false) {
+		return DB::instance(function() use ($dsn, $username, $password) {
+			return new DB(array("dsn"=>$dsn, "username"=>$username, "password"=>$password));
 		});
 	}
 }

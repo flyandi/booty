@@ -41,13 +41,6 @@
   * 
   */
 
-# Minimum configuration
-$BOOTY_PLATFORM_PATH     = "../platform";
-$BOOTY_PLATFORM_HANDLER	 = "handler.php";
-	
-
-# Run platform handler	
-chdir($BOOTY_PLATFORM_PATH);
-require_once($BOOTY_PLATFORM_HANDLER);
+require_once("../platform/handler.php");
 	
 

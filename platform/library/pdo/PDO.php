@@ -86,18 +86,7 @@ class BootyPDO {
 		return $query;
 	}
 
-	/** Create CREATE query
-	 *
-	 * @param string $table
-	 * @param array $values  you can add one or multi rows array @see docs
-	 * @return \CreateQuery
-	 */
-	public function create($table, $values = array()) {
-		$query = new InsertQuery($this, $table, array_merge($values, array(
-			"idstring" => CreateGUID()
-		)));
-		return $query;
-	}
+	
 
 	/** Create INSERT INTO query
 	 *

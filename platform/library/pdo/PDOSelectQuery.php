@@ -41,6 +41,7 @@ class SelectQuery extends CommonQuery implements Countable {
 		$this->statements['FROM'] = $from;
 		$this->statements['SELECT'][] = $this->fromAlias . '.*';
 		$this->joins[] = $this->fromAlias;
+		$this->table = $from;
 	}
 
 	/** Return table name from FROM clause
@@ -128,6 +129,11 @@ class SelectQuery extends CommonQuery implements Countable {
 			return false;
 		}
 	}
+
+	public function everything() {
+		return $this->fetchAll();
+	}
+
 
 	/** Countable interface
 	 * doesn't break current fluentpdo select query

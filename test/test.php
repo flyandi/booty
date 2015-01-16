@@ -34,29 +34,79 @@
 
 
 /**
-  * Boot
+  * Test Processor
   */
 
-require_once("boot.php");
+$files = array();
+
+array_shift($argv);
 
 
-/**
-  * (Application Handler)
-  */
+// run arguments
+foreach($argv as $argument) {
 
-// Initialize app loader
-$application_loader = new Booty\Framework\Applications();
+	// prepare switches
+	switch($argument) {
 
-// detect application
-$application_loader->detect($BOOTY_GLOBAL->asArray("applications"));
+		/** (-a) all files */
+		case "-a": 
 
-// run handlers
-if($application_loader->has()) {
-	
-	// run application 
-	return $application_loader->application->emit();
-} 
+			break;
+
+		/** (default) just add filenames to prceossor */
+		default:
+			foreach(array($argument, $argument.".php") as $fn) {
+				if(file_exists($fn)) {
+					$files[] = $fn;
+					break;
+				}
+			}
+			break;
+	}
+}
+
+// Boot up
+include("../platform/boot.php");
 
 
-// handle exit
-Booty\Framework\Error::handle(BOOTY_ERROR_NOAPPLICATION);
+// Run file processor
+foreach($files as $fn) {
+
+	// load file
+	include("../test/". $fn);
+
+	// create class name
+	$cln = "\Booty\Framework\Test".ucfirst(basename($fn, ".php"));
+
+
+	// class
+	$cl = new $cln();
+
+	if(is_a($cl, "\Booty\Framework\Test")) {
+
+		
+		// get methods
+		$methods = array_diff(get_class_methods($cl), get_class_methods("\Booty\Framework\Test"), array("Initialize"));
+
+		// cycle through methods
+		foreach($methods as $test) {
+			try {
+				// run test
+				if($cl->run($test)) {
+					// verify success
+					if(!$cl->HasSuccess($test)) break;
+				}
+
+			} catch(Exception $e) {
+				$cl->Error($test, $e->message);
+			}
+		}
+
+	} else {
+
+		echo sprintf("Unable to load test for %s.\n", $cln);
+
+	}
+}
+
+

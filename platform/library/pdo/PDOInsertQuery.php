@@ -34,6 +34,8 @@ class InsertQuery extends BaseQuery {
 	}
 
 	public function push() {
+
+		echo "**** PUSH ****\n\n";
 		$this->execute();
 
 		return $this;

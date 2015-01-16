@@ -166,6 +166,10 @@ abstract class BaseQuery implements IteratorAggregate {
 		return $this->fpdo->getPdo();
 	}
 
+	protected function getBase() {
+		return $this->fpdo;
+	}
+
 	/**
 	 * @return \FluentStructure
 	 */

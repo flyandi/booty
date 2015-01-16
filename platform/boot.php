@@ -32,31 +32,58 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
-/**
-  * Boot
+/** 
+  * Working Directory
   */
 
-require_once("boot.php");
+chdir(dirname(__FILE__));
+
+/**
+  * (spl_autoload_register)
+  */
+spl_autoload_register(function($className) {
+
+	if($className[0] == '\\') {
+		$className = substr($className, 1);
+	}
+
+	// initialize
+	$classPath = false;
+
+	// check handler
+	switch(true) {
+
+		// Framework Namespace
+		case stripos($className, "Booty\\View") !== false:
+		case stripos($className, "Booty\\Framework") !== false:
+			$classPath = lcfirst(strtr(substr($className, strpos($className, "Booty\\") + 6), "\\", "/")) . ".php";
+			break;
+
+		default:
+			return;
+	}
+
+	// include
+	if($classPath) {
+		// prepare 
+		$classPath = __DIR__ . "/" . $classPath;
+		// sanity check
+		if(file_exists($classPath)) require_once($classPath);
+	}
+});
 
 
 /**
-  * (Application Handler)
+  * (Global Includes)
   */
 
-// Initialize app loader
-$application_loader = new Booty\Framework\Applications();
-
-// detect application
-$application_loader->detect($BOOTY_GLOBAL->asArray("applications"));
-
-// run handlers
-if($application_loader->has()) {
-	
-	// run application 
-	return $application_loader->application->emit();
-} 
+foreach(array("Helpers") as $c) {
+	require_once("library/" . $c . ".php");
+}
 
 
-// handle exit
-Booty\Framework\Error::handle(BOOTY_ERROR_NOAPPLICATION);
+/**
+  * (Global Configuration)
+  */
+
+SetVar("BOOTY_GLOBAL", $BOOTY_GLOBAL = new Booty\Framework\Configuration(Booty\Framework\ConfigurationFiles::globals));
