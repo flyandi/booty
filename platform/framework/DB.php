@@ -119,7 +119,7 @@ class DB extends Primitive {
 			$this->pdo = new \PDO($connection->dsn, $connection->username, $connection->password);
 
 			// create query builder pdo
-			$this->builder = new \BootyPDO($this->pdo);
+			$this->builder = new \BootyPDO($this->pdo, new \FluentStructure(DB::id));
 
 			// set status
 			$this->status = DatabaseStatus::connected;
@@ -142,9 +142,9 @@ class DB extends Primitive {
 	 * (PDO Mappings) static mappings to the builder
 	 */
 
-	static public function select($table) {
+	static public function select($table, $primaryKey = null) {
 		// connect to instance
-		return DB::instance()->builder->from($table);
+		return DB::instance()->builder->from($table, $primaryKey);
 	}
 
 	static public function create($table, $values = array()) {
@@ -154,7 +154,7 @@ class DB extends Primitive {
 
 		// insert
 		DB::instance()->builder->insertInto($table, array_merge(is_array($values) ? $values : array(), array(
-			"idstring" => $id
+			DB::id => $id
 		)))->execute();
 
 		// return select
@@ -171,6 +171,10 @@ class DB extends Primitive {
 		return DB::instance(function() use ($dsn, $username, $password) {
 			return new DB(array("dsn"=>$dsn, "username"=>$username, "password"=>$password));
 		});
+	}
+
+	static public function update($table, $primaryKey = null, $set = array()) {
+		return DB::instance()->builder->update($table, $set, $primaryKey);
 	}
 }
 

@@ -119,6 +119,14 @@ class Test {
 	}
 
 	/**
+	  * HadSuccess
+	  */
+
+	public function HadSuccess($test) {
+		return !isset($this->fails[$test]);
+	}
+
+	/**
 	  * Error
 	  */
 
