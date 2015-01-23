@@ -35,12 +35,6 @@
 namespace Booty\Framework;
 
 /**
-  * (load query library)
-  */
-
-require_once(dirname(__FILE__)."/../library/pdo/PDO.php");
-
-/**
   * (constants)
   */
 
@@ -52,10 +46,6 @@ interface DatabaseStatus {
 	const connected = 1;
 }
 
-interface DatabaseDriverError {
-	const credentials = x001;
-
-}
 
 
 /** 
@@ -70,6 +60,7 @@ class DB extends Primitive {
 	 */
 
 	public $status = DatabaseStatus::disconnected;
+	public $pdo = false;
 
 	/**
 	 * (constants)
@@ -79,8 +70,8 @@ class DB extends Primitive {
 	const failed = false;
 
 	// Default fields
-	const idstring = 'idstring';
-	const id = 'idstring';
+	const idstring = Query::idstring;
+	const id = Query::idstring;
 
 
 	/** 
@@ -119,7 +110,7 @@ class DB extends Primitive {
 			$this->pdo = new \PDO($connection->dsn, $connection->username, $connection->password);
 
 			// create query builder pdo
-			$this->builder = new \BootyPDO($this->pdo, new \FluentStructure(DB::id));
+			//$this->builder = new \BootyPDO($this->pdo, new \FluentStructure(DB::id));
 
 			// set status
 			$this->status = DatabaseStatus::connected;
@@ -134,38 +125,12 @@ class DB extends Primitive {
 	 */
 
 	public function __call($name, $arguments) {
-		return call_user_func_array($this->builder->{$name}, $arguments);
+		//return call_user_func_array($this->builder->{$name}, $arguments);
 	}
-
 
 	/**
-	 * (PDO Mappings) static mappings to the builder
+	 * (Connect)
 	 */
-
-	static public function select($table, $primaryKey = null) {
-		// connect to instance
-		return DB::instance()->builder->from($table, $primaryKey);
-	}
-
-	static public function create($table, $values = array()) {
-
-		// create guid
-		$id = CreateGUID();
-
-		// insert
-		DB::instance()->builder->insertInto($table, array_merge(is_array($values) ? $values : array(), array(
-			DB::id => $id
-		)))->execute();
-
-		// return select
-		return DB::select($table, $id);
-	}
-
-	static public function get($table, $id = false, $create = true) {
-		return DB::instance()->builder->from($table)->select(array(DB::id => ($id ? $id : null)))->notfound(function($query) {
-			return DB::create(TABLE_CAMPAIGNS);
-		});
-	}
 
 	static public function connect($dsn, $username = false, $password = false) {
 		return DB::instance(function() use ($dsn, $username, $password) {
@@ -173,8 +138,20 @@ class DB extends Primitive {
 		});
 	}
 
-	static public function update($table, $primaryKey = null, $set = array()) {
-		return DB::instance()->builder->update($table, $set, $primaryKey);
+
+	/**
+	 * (PDO Mappings) static mappings to the builder
+	 */
+
+	static public function table($table, $id = null) {
+		return new Query($table, $id);
 	}
+
+ 	static public function pdo() {
+ 		return DB::instance()->pdo;
+ 	}
+
 }
+
+
 

@@ -86,7 +86,7 @@ foreach($files as $fn) {
 
 		
 		// get methods
-		$methods = array_diff(get_class_methods($cl), get_class_methods("\Booty\Framework\Test"), array("Initialize"));
+		$methods = array_diff(get_class_methods($cl), get_class_methods("\Booty\Framework\Test"), array("Initialize", "Assert"));
 
 		// cycle through methods
 		foreach($methods as $test) {

@@ -97,8 +97,18 @@ class Test {
 	  */
 
 	public function Fail($message, $notice = false) {
-		$trace = debug_backtrace();
-		$trace = (object) $trace[count($trace)-1];
+
+		$trace = false; $x = 1;
+		while(!$trace) {
+			$trace = debug_backtrace();
+			$trace = (object) $trace[count($trace)-$x];
+
+			if($trace->function == "Run") {
+				$x++;
+				$trace = false;
+			}
+
+		}
 
 		$this->fails[$trace->function] = true;
 

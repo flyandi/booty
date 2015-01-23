@@ -243,4 +243,12 @@ abstract class CommonQuery extends BaseQuery {
 		return $this;
 	}
 
+	/**
+	 * 
+	 */
+
+	public function result() {
+
+		return $this->getBase()->from($this->table, $this->primaryKey);
+	}
 }

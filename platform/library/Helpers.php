@@ -483,11 +483,37 @@ function TraverseArray($input, $handler) {
 				TraverseArray($value, $handler);
 				break;
 			default:
-				$handler($key, $value);
+				if(is_callable($handler)) {
+					$handler($key, $value);
+				}
 				break;
 		}
 	}
 }
+
+
+/** 
+ * (macro) StringArray
+ * Converts an array to a request string
+ *
+ * @param input 			Any array
+ * @param recursive
+ */ 
+
+function StringArray($input, $pairlimiter = "&", $valuelimiter = "=") {
+	// initialize
+	$result = array();
+
+	// cycle
+	foreach($input as $key => $value) {
+
+		// connect
+		$result[] = $key . $valuelimiter . $value;
+	}
+
+	return implode($pairlimiter, $result);
+}
+
 
 /** 
  * (macro) ObtainArray
