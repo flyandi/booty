@@ -60,6 +60,7 @@ class Query {
 	const update = 'UPDATE';
 	const delete = 'DELETE';
 	const insert = 'INSERT INTO';
+	const set = 'SET';
 	const values = 'VALUES';
 	const from = 'FROM';
 	const where = 'WHERE';
@@ -81,17 +82,28 @@ class Query {
 	private $updated = false;
 	private $statements = array();
 	private $rows = array();
+	private $row = array();
 	private $query = false;
 	private $object = false;
 	private $pdo = false;
 	private $raw = false;
+	private $currentrow = false;
+	private $currentclause = false;
+
+	/**
+	  * (publics)
+	  */
+
+	public $status = false;
+	public $type = false;
+
 
 	/** 
 	 * (__construct) 
 	 *
      * @param source 		Specify the source of the configration 
 	 */
-	public function __construct($table, $id = false) {
+	public function __construct($table, $id = null) {
 		// assign
 		$this->table = $table;
 		$this->id = $id;
@@ -103,7 +115,9 @@ class Query {
 		$this->From($table);
 
 		// check id
-		if($this->id) $this->Where(Query::id, $id);
+		if($this->id) {
+			$this->FromId($id);
+		}
 
 	}
 
@@ -134,16 +148,106 @@ class Query {
 	 * I/O
 	 */
 
-	public function Write() { //$row, $name, $value, $publish) {
+	public function Publish($row = false) {
 
-		var_dump($this->rows);
-		exit;
+		if($this->currentclause != Query::select) return; 
+
+		// initialize
+		$values = false;
+
+		// get values
+		switch($this->type) {
+			
+			case QueryResult::single:
+				$row = 0;
+
+			default:	
+				$row = $row === false ? $this->currentrow : $row;
+				$values = isset($this->rows[$row]) ? $this->rows[$row] : false;
+				break;
+		}
+
+		if(is_array($values)) {
+			$this->Update($values);
+		}
+
+	}
+
+	public function Write($row, $name, $value = false, $publish = false) {
+
+		// write to row model
+		switch($this->type) {
+
+			case QueryResult::single:
+				if(!is_array($row)) {
+					$values = array($row => $name);
+					$publish = $value;
+				} else {
+					$values = $row;
+					$publish = $name;
+				}
+				$row = 0;
+				break;
+
+			default:
+				if(isset($this->rows[$row])) {
+					if(!is_array($name)) {
+						$values = array($name => $value);
+					} else {
+						$values = $name;
+						$publish = $value;
+					}
+				} else {
+					return false;
+				}
+				break;
+		}
+		// set data
+		foreach($values as $name => $value) {
+			$this->rows[$row][$name] = $value;
+		}
+
+		// update
+		if($publish) $this->Publish();
+	}
+
+	public function Read($row, $name = false, $default = false) {
+
+		// write to row model
+		switch($this->type) {
+
+			case QueryResult::single:
+				$default = $name;
+				$name = $row;
+				$row = 0;
+
+			default:
+				return isset($this->rows[$row]) && isset($this->rows[$row][$name]) ? $this->rows[$row][$name] : $default;
+				break;
+		}
+
+	}
+
+	public function everything($auto = true) {
+		switch($this->type) {
+			case QueryResult::single:
+				return isset($this->rows[0]) && is_array($this->rows[0]) ? ($auto ? (object) $this->rows[0] : $this->rows[0]) : false;
+				break;
+
+			default:
+				return is_array($this->rows) ? $this->rows : false;
+				break;
+		}
 	}
 
 
 	/** 
 	 * Keywords
 	 */
+
+	public function FromId($id) {
+		$this->reset(Query::where)->Where(Query::id, $id)->select()->__execute(Query::select, QueryResult::single);
+	}
 
 	public function From($table) {
 		$this->__clause(Query::from, $table);
@@ -173,6 +277,14 @@ class Query {
 
 	public function Where($conditions, $parameters = array()) {
 		return $this->__clause(Query::where, $conditions, $parameters);
+	}
+
+	public function Update($values = null) {
+		return $this->reset(Query::set)->__clause(Query::set, $values, null)->__execute(Query::update);
+	}
+
+	public function Delete() {
+		return $this->__execute(Query::delete);
 	}
 
 
@@ -278,24 +390,34 @@ class Query {
 	}
 
 	public function __call($name, $arguments) {
-
-		//$this->__clause($name, $arguments);
-		echo "FAILED $name";
+		
+		$this->__clause($name, $arguments);
 	}
 
 	/**
 	 * (__execute)
 	 */
 
-	private function __execute($clause, $request = QueryResult::raw) {
+	private function __execute($clause, $request = null) {
+
+		// query
+		if(!in_array($clause, array(Query::update))) {
+
+			// reset clause
+			$this->currentclause= $clause;
+
+			// reset rows
+			$this->rows = array();
+
+			// reset status
+			$this->status = false;
+		}
 
 		// acquire reference to pdo
 		$this->pdo = DB::pdo();
 		
 		// retrieve query
 		if($clause !== false) $query = $this->__query($clause);
-
-		var_dump($query);
 
 		// prepare query
 		$result = $this->pdo->prepare($query);
@@ -320,22 +442,25 @@ class Query {
 		$this->raw = $result;
 
 		if($result) {
+			// set type
+			if($request !== null) $this->type = $request;
+
 			// parse result
 			switch($request) {
 
 				case QueryResult::single:
 
-					var_dump($result);
-
 					// get result
 					$row = $result->fetchall();
 
 					// parse result
-					$row = isset($row[0]) && is_array($row[0]) ? $row[0] : false;
+					$this->rows = array(isset($row[0]) && is_array($row[0]) ? $row[0] : false);
+
+					$this->status = is_array($this->rows[0]);
 
 					// return result
-					return (object)array_merge(is_array($row) ? $row : array(), array(
-						"status" => is_array($row)
+					return (object)array_merge(is_array($this->rows[0]) ? $this->rows[0] : array(), array(
+						"status" => $this->status
 					));
 
 					break;
@@ -355,8 +480,35 @@ class Query {
 		$that = $this;
 		$pattern = false;
 		$query = array();
+		$__clause = $clause;
 
 		switch($clause) {
+
+			// (Delete)
+			case Query::delete:
+
+				$pattern = array(
+					"DELETE" => function($statements) use ($that) {
+						return Query::delete;
+					},
+					"FROM" => null,
+					"WHERE" => " AND ",
+				);
+
+				break;
+
+			// (Update)
+			case Query::update:
+
+				$pattern = array(
+					"UPDATE" => function($statements) use ($that) {
+						return sprintf("%s %s", Query::update, $that->table);
+					},
+					"SET" => ",",
+					"WHERE" => " AND "
+				);
+
+				break;
 			
 			// (Select)
 			case Query::select:
@@ -399,6 +551,10 @@ class Query {
 				);
 
 				break;
+
+			default:
+
+				return false;
 		}
 
 		// build query
@@ -406,10 +562,11 @@ class Query {
 
 			$clause = strtoupper(trim(str_replace(" ", "", $_clause)));
 
-			if(isset($this->statements[$clause]) || in_array($_clause, array(Query::insert))) {
+			if(isset($this->statements[$clause]) || in_array($_clause, array(Query::update, Query::insert, Query::delete))) {
 
 				// get statement
 				$statements = DefaultValue(@$this->statements[$clause], false);
+
 
 				// switch true
 				switch(true) {
@@ -420,14 +577,21 @@ class Query {
 
 					case is_array($statements) && count($statements) > 0:
 
-						$query[] = sprintf("%s %s", $clause, implode($separator, $statements));
+						$list = array();
+
+						foreach($statements as $index=>$value) {
+							if(!in_array($index, $this->__filterlist($clause))) {
+								$list[] = is_string($index) ? sprintf("%s=%s", $index, $this->__quote($value)) : $value;
+							}
+						}
+
+						$query[] = sprintf("%s %s", $clause, implode($separator, $list));
 						break;
 
 					case $separator == null: 
 
 						$query[] = sprintf("%s %s", $clause, is_array($statements) && count($statements) > 0 ? $statements[0] : $statements);
 						break;
-
 				}
 			}
 
@@ -504,6 +668,22 @@ class Query {
 	private function __iskeyword($value) {
 
 		return false;
+	}
+
+
+	/**
+	  * (__filterlist)
+	  */
+
+	private function __filterlist($clause) {
+		switch($clause) {
+
+			case Query::set:
+				return array(Query::idstring);
+				break;
+		}
+
+		return array(); // empty
 	}
 
 	

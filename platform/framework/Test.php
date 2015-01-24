@@ -52,6 +52,7 @@ class Test {
 	  */
 
 	private $fails = array();
+	private $buffer = array();
 
 	/** 
 	  * Constructor
@@ -157,5 +158,17 @@ class Test {
 
 				break;
 		}
+	}
+
+	/**
+	  * Set/Get
+	  */
+
+	public function Set($name, $value) {
+		$this->buffer[$name] = $value;
+	}
+
+	public function Get($name, $default = false) {
+		return isset($this->buffer[$name]) ? $this->buffer[$name] : $default;
 	}
 }
