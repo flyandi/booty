@@ -11,6 +11,8 @@
 	# Test for Database 
 	class TestDb extends Test {
 
+		public $id = false;
+
 		function Initialize() {
 
 			$this->db = DB::connect("mysql:host=localhost;dbname=".DB_NAME, DB_USER, DB_PASSWORD); 
@@ -33,6 +35,7 @@
 
 		}
 
+
 		function DatabaseCreateTest() {
 
 			// create item
@@ -40,60 +43,57 @@
 
 			$items->write("name", "Test Item", true);
 
-			
-		/*
-
-			$this->id = $items->fetch(DB::id);
-
-
-			$this->Assert($items->fetch(DB::id) != null, $items);*/
+			$this->set("id", $items->Read(Query::id));
 
 		}
 
-/*
+
 
 		function DatabaseSelectTest() {
 
-			$items = DB::select(DB_TABLE);
+			// create item
+			$items = DB::table(DB_TABLE, $this->get("id"));
 
-			$this->Assert($items->count() != 0, $items);
-
-		}
-
-
-		function DatabasePrimaryKeySelectTest() {
-
-			$item = DB::select(DB_TABLE, $this->id); 
-
-			$this->Assert($item->count() != 0, $item);
+			$this->AssertTrue($items->Read("name") == "Test Item", "Failed to select the newly created test item.");
 
 		}
-
-		function DatabaseSelectWhereTest() {
-
-			$item = DB::select(DB_TABLE)->where(array(DB::id => $this->id));
-
-			$this->Assert($item->count() != 0, $item);
-		}
-
 
 
 		function DatabaseUpdateTest() {
 
-			if($this->HadSuccess("DatabaseCreateTest")) {
+			// create item
+			$item = DB::table(DB_TABLE, $this->get("id"));
 
-				$items = DB::update(DB_TABLE, $this->id, array("name"=>"Test2"))->result();
+			$item->write("value", "New Value", true);
 
-				$this->AssertTrue($items->fetch("name" != null, "Could not update a database row"));
+			$this->AssertTrue($item->Read("value") == "New Value", "Failed to update the database item");
+
+		} 
 
 
+		function DatabaseArrayUpdateTest() {
 
-			}
+			// create item
+			$item = DB::table(DB_TABLE, $this->get("id"));
 
-			
+			$item->write(array(
+				"name" => "New Name",
+				"value" => "Super Value"
+			), true);
+
+			$this->AssertTrue($item->Read("value") == "Super Value", "Failed to array update the database item");
 
 		}
-//*/
+
+		function DatabaseDeleteTest() {
+
+			// create item
+			DB::table(DB_TABLE, $this->get("id"))->Delete();
+
+			$this->AssertTrue(DB::table(DB_TABLE, $this->get("id"))->status === false, "Failed to delete the database item");
+
+		}
+
 
 	}
 
