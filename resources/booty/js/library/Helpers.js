@@ -48,6 +48,35 @@ jQuery.fn.outerHtml = function() {
 	return $("<div>").append($(this).clone()).html();s
 }
 
+jQuery.fn.align = function(align) {
+
+	switch(align) {
+		case Align.auto: 
+			align = {left: Align.auto, left: Align.auto, right: Align.auto, bottom: Align.auto};
+			break;
+
+		case Align.none:
+			return;
+			break;
+	}
+
+	align = $.extend({}, {absolute: true, margin: 10, left: false, right: false, top: false, bottom: false, width: false, height: false}, align);
+
+	return this.each(function() {
+
+		var target = $(this);
+
+		target.css($.extend({}, {
+			margin: align.margin
+		}, align.absolute ? {position: 'absolute'} : {}));
+
+		$.each(['left', 'top', 'bottom', 'right', 'width', 'height'], function(index, value) {
+			target.css(value, align[value] ? align[value] : "");
+		});
+
+	});
+}
+
 /**
   * (macro) $$$ Shortcut to create jQuery Elements
   */

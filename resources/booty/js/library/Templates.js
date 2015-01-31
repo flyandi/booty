@@ -56,7 +56,7 @@ var Template = (function() {
         language: TemplateLanguages.jsonml,  
       }, Booty.$.is.object(settings) ? settings : {language: settings});
 
-      this.target = target ? target : $("<template>");
+      this.target = target ? target : $("<div>").attr("role", "template");
 
       this.__parse();
 
@@ -66,6 +66,16 @@ var Template = (function() {
 
       // (instance)
       instance: false,
+
+      // (html)
+      html: function() {
+        return this.target.html();
+      },
+
+      // (element)
+      element: function() {
+        return this.target;
+      },
 
       // (__parse)
       __parse: function() {
@@ -90,12 +100,16 @@ var Template = (function() {
 
         var that = this;
 
+
         if(!Booty.$.is.array(root)) return false;
+
 
 
         root.forEach(function(node) {
 
+
           switch(true) {
+
             case Booty.$.is.array(node) && Booty.$.is.string(node[0]):
 
               var attributes = $.extend({}, {_class: false}, Booty.$.is.object(node[1]) ? node[1] : {}),

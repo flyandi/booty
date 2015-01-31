@@ -39,7 +39,12 @@
 var Align = {
 	left: '-left',
 	right: '-right',
-	center: '-center'
+	center: '-center',
+	auto: 10,
+	none: false,
+	percentage: function(d) {
+		return d + '%';
+	},
 };
 
 

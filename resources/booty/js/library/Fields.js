@@ -124,7 +124,7 @@ var Fields = (function(){
                         fields.forEach(function(item) {
 
                             // prepare item
-                            item = $.extend({}, {storagedata: null, storage: false, append: false, ref: Booty.ref.none, hooks: false, use: true}, item);
+                            item = $.extend({}, {classes: false, storagedata: null, storage: false, append: false, ref: Booty.ref.none, hooks: false, use: true}, item);
 
                             if(Booty.$.is.proc(item.use) ? item.use() : (item.use === true)) {
 
@@ -139,7 +139,7 @@ var Fields = (function(){
                                         if(!u) {
                                            u = true;
 
-                                           container.append(component.get(container, $("<div>"), item, that));
+                                           container.append(component.get(container, $("<div>").addClass(item.classes ? item.classes : ""), item, that));
 
                                             if(Booty.$.is.object(item.hooks)) {
                                                 container.on("after", function() {
